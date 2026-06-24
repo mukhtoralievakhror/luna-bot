@@ -25,165 +25,71 @@
       min-height: 100vh;
       padding-bottom: 2rem;
     }
-
-    /* HERO HEADER */
     .hero {
-      position: relative;
-      overflow: hidden;
-      height: 130px;
+      position: relative; overflow: hidden; height: 130px;
       background: linear-gradient(140deg, #fce4ec 0%, #f8bbd0 50%, #ede7f6 100%);
     }
-    .hero-orb1 {
-      position: absolute; width: 130px; height: 130px; border-radius: 50%;
-      background: rgba(244,63,94,0.18); top: -35px; right: -25px;
-    }
-    .hero-orb2 {
-      position: absolute; width: 80px; height: 80px; border-radius: 50%;
-      background: rgba(244,63,94,0.10); top: 15px; right: 45px;
-    }
-    .hero-moon {
-      position: absolute; right: 18px; top: 8px;
-      font-size: 58px; opacity: 0.22; filter: blur(1px); line-height: 1;
-    }
+    .hero-orb1 { position: absolute; width: 130px; height: 130px; border-radius: 50%; background: rgba(244,63,94,0.18); top: -35px; right: -25px; }
+    .hero-orb2 { position: absolute; width: 80px; height: 80px; border-radius: 50%; background: rgba(244,63,94,0.10); top: 15px; right: 45px; }
+    .hero-moon { position: absolute; right: 18px; top: 8px; font-size: 58px; opacity: 0.22; filter: blur(1px); line-height: 1; }
     .hero-glass {
-      position: absolute; bottom: 0; left: 0; right: 0;
-      padding: 10px 16px;
-      background: rgba(255,255,255,0.60);
-      backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+      position: absolute; bottom: 0; left: 0; right: 0; padding: 10px 16px;
+      background: rgba(255,255,255,0.60); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
       display: flex; align-items: center; justify-content: space-between;
     }
     .hero-title { font-size: 16px; font-weight: 600; color: var(--text-dark); }
     .hero-sub { font-size: 12px; color: var(--text-mid); margin-top: 1px; }
-
-    /* TABS */
-    .tabs {
-      display: flex;
-      background: var(--white);
-      border-bottom: 0.5px solid var(--border);
-      overflow-x: auto;
-    }
+    .tabs { display: flex; background: var(--white); border-bottom: 0.5px solid var(--border); overflow-x: auto; }
     .tab {
-      flex: 1;
-      padding: 10px 6px;
-      border: none;
-      background: none;
-      font-size: 12px;
-      color: var(--text-soft);
-      cursor: pointer;
-      white-space: nowrap;
-      border-bottom: 2px solid transparent;
+      flex: 1; padding: 10px 6px; border: none; background: none;
+      font-size: 12px; color: var(--text-soft); cursor: pointer;
+      white-space: nowrap; border-bottom: 2px solid transparent;
     }
-    .tab.active {
-      color: var(--accent);
-      border-bottom-color: var(--accent);
-      font-weight: 500;
-    }
-
+    .tab.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 500; }
     .page { display: none; padding: 14px; }
     .page.active { display: block; }
-
-    /* CARDS */
-    .card {
-      background: var(--white);
-      border: 0.5px solid var(--border);
-      border-radius: 14px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
-      padding: 14px;
-      margin-bottom: 12px;
-    }
-
-    /* STAT GRID */
+    .card { background: var(--white); border: 0.5px solid var(--border); border-radius: 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); padding: 14px; margin-bottom: 12px; }
     .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
-    .stat-card {
-      background: var(--white);
-      border: 0.5px solid var(--border);
-      border-radius: 14px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
-      padding: 14px 12px;
-      text-align: center;
-    }
+    .stat-card { background: var(--white); border: 0.5px solid var(--border); border-radius: 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); padding: 14px 12px; text-align: center; }
     .stat-label { font-size: 10px; color: var(--text-soft); margin-bottom: 4px; font-weight: 500; text-transform: uppercase; letter-spacing: .3px; }
     .stat-value { font-size: 22px; font-weight: 600; color: var(--text-dark); }
     .stat-unit { font-size: 11px; color: var(--text-mid); margin-top: 2px; }
-
-    /* RING */
     .ring-wrap { display: flex; justify-content: center; margin: 14px 0; }
     canvas.ring { max-width: 180px; }
-
-    /* SECTION TITLE */
-    .section-title {
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--text-dark);
-      margin: 4px 0 10px;
-    }
-
-    /* CYCLE ROW */
-    .cycle-row {
-      background: var(--white);
-      border: 0.5px solid var(--border);
-      border-radius: 12px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
-      padding: 12px 14px;
-      margin-bottom: 8px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
+    .section-title { font-size: 13px; font-weight: 600; color: var(--text-dark); margin: 4px 0 10px; }
+    .cycle-row { background: var(--white); border: 0.5px solid var(--border); border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); padding: 12px 14px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
     .cycle-dates { font-size: 13px; color: var(--text-dark); }
-    .cycle-len {
-      font-size: 11px;
-      background: var(--accent-light);
-      color: var(--accent);
-      padding: 3px 10px;
-      border-radius: 20px;
-      font-weight: 500;
-    }
-
-    /* CALENDAR */
-    .calendar-grid {
-      display: grid;
-      grid-template-columns: repeat(7, 1fr);
-      gap: 4px;
-      text-align: center;
-    }
+    .cycle-len { font-size: 11px; background: var(--accent-light); color: var(--accent); padding: 3px 10px; border-radius: 20px; font-weight: 500; }
+    .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; text-align: center; }
     .cal-day-name { font-size: 10px; color: var(--text-soft); padding: 4px 0; font-weight: 500; }
-    .cal-day {
-      font-size: 12px;
-      padding: 6px 2px;
-      border-radius: 50%;
-      aspect-ratio: 1;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
+    .cal-day { font-size: 12px; padding: 6px 2px; border-radius: 50%; aspect-ratio: 1; display: flex; align-items: center; justify-content: center; }
     .cal-day.period { background: var(--accent); color: white; }
     .cal-day.ovulation { background: var(--accent-light); color: var(--accent); }
     .cal-day.pms { background: var(--surface); color: var(--text-mid); border: 0.5px solid var(--border); }
     .cal-day.today { font-weight: 600; border: 2px solid var(--accent); }
     .cal-day.empty { opacity: 0; }
-
-    /* LEGEND */
     .legend { display: flex; gap: 12px; flex-wrap: wrap; margin: 10px 0; }
     .leg { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--text-mid); }
     .leg-dot { width: 10px; height: 10px; border-radius: 50%; }
-
-    /* CHART */
     .loading { text-align: center; padding: 3rem 1rem; color: var(--text-mid); font-size: 14px; }
-    .chart-wrap {
-      background: var(--white);
-      border: 0.5px solid var(--border);
-      border-radius: 14px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
-      padding: 14px;
-      margin-bottom: 12px;
-    }
+    .chart-wrap { background: var(--white); border: 0.5px solid var(--border); border-radius: 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); padding: 14px; margin-bottom: 12px; }
     .chart-title { font-size: 12px; font-weight: 600; color: var(--text-dark); margin-bottom: 10px; }
+
+    /* SETTINGS */
+    .settings-section { margin-bottom: 18px; }
+    .settings-label { font-size: 11px; color: var(--text-soft); font-weight: 600; text-transform: uppercase; letter-spacing: .4px; margin-bottom: 10px; }
+    .lang-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+    .lang-btn {
+      padding: 10px 6px; border-radius: 10px; border: 1.5px solid var(--border);
+      background: var(--white); font-size: 12px; color: var(--text-dark);
+      cursor: pointer; text-align: center; transition: all .15s;
+    }
+    .lang-btn.active { border-color: var(--accent); background: var(--accent-light); color: var(--accent); font-weight: 600; }
+    .saved-msg { text-align: center; font-size: 13px; color: var(--accent); margin-top: 12px; height: 20px; }
   </style>
 </head>
 <body>
 
-<!-- Hero header -->
 <div class="hero">
   <div class="hero-orb1"></div>
   <div class="hero-orb2"></div>
@@ -191,32 +97,47 @@
   <div class="hero-glass">
     <div>
       <div class="hero-title">Luna</div>
-      <div class="hero-sub" id="header-sub">Yuklanmoqda...</div>
+      <div class="hero-sub" id="header-sub">...</div>
     </div>
     <span style="font-size:20px;">🌸</span>
   </div>
 </div>
 
-<!-- Tabs -->
-<div class="tabs">
-  <button class="tab active" onclick="showTab('overview')">✨ Umumiy</button>
-  <button class="tab" onclick="showTab('calendar')">📅 Kalendar</button>
-  <button class="tab" onclick="showTab('history')">📋 Tarix</button>
-  <button class="tab" onclick="showTab('mood')">💕 Kayfiyat</button>
+<div class="tabs" id="tab-bar">
+  <button class="tab active" onclick="showTab('overview')" id="tb-overview"></button>
+  <button class="tab" onclick="showTab('calendar')" id="tb-calendar"></button>
+  <button class="tab" onclick="showTab('history')" id="tb-history"></button>
+  <button class="tab" onclick="showTab('mood')" id="tb-mood"></button>
+  <button class="tab" onclick="showTab('settings')" id="tb-settings">⚙️</button>
 </div>
 
-<!-- Pages -->
 <div id="tab-overview" class="page active">
-  <div id="overview-content" class="loading">Yuklanmoqda 🌸</div>
+  <div id="overview-content" class="loading">🌸</div>
 </div>
 <div id="tab-calendar" class="page">
-  <div id="calendar-content" class="loading">Yuklanmoqda 🌸</div>
+  <div id="calendar-content" class="loading">🌸</div>
 </div>
 <div id="tab-history" class="page">
-  <div id="history-content" class="loading">Yuklanmoqda 🌸</div>
+  <div id="history-content" class="loading">🌸</div>
 </div>
 <div id="tab-mood" class="page">
-  <div id="mood-content" class="loading">Yuklanmoqda 🌸</div>
+  <div id="mood-content" class="loading">🌸</div>
+</div>
+<div id="tab-settings" class="page">
+  <div class="card">
+    <div class="settings-section">
+      <div class="settings-label" id="lbl-lang-section">Til / Язык</div>
+      <div class="lang-grid">
+        <button class="lang-btn" data-lang="uz" onclick="setLang('uz')">🇺🇿 O'zbek</button>
+        <button class="lang-btn" data-lang="ru" onclick="setLang('ru')">🇷🇺 Русский</button>
+        <button class="lang-btn" data-lang="en" onclick="setLang('en')">🇬🇧 English</button>
+        <button class="lang-btn" data-lang="kk" onclick="setLang('kk')">🇰🇿 Қазақша</button>
+        <button class="lang-btn" data-lang="tg" onclick="setLang('tg')">🇹🇯 Тоҷикӣ</button>
+        <button class="lang-btn" data-lang="ky" onclick="setLang('ky')">🇰🇬 Кыргызча</button>
+      </div>
+      <div class="saved-msg" id="saved-msg"></div>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -229,23 +150,176 @@ const API_BASE = 'https://luna-bot-production-6d42.up.railway.app';
 
 let DATA = null;
 
+// ── i18n ──────────────────────────────────────────────
+const LABELS = {
+  uz: {
+    tab_overview: '✨ Umumiy', tab_calendar: '📅 Kalendar',
+    tab_history: '📋 Tarix', tab_mood: '💕 Kayfiyat',
+    loading: 'Yuklanmoqda 🌸', open_in_tg: 'Telegram orqali oching 🌸',
+    header_next: (n) => `${n} kundan keyin sehrli kunlar`,
+    header_started: 'Sehrli kunlar boshlandi!', header_none: "Ma'lumot yo'q",
+    avg_cycle: "O'rtacha sikl", period_days: 'Sehrli kunlar',
+    next_lbl: 'Keyingi ✨', glow_lbl: 'Nur kuni 💫',
+    days: 'kun', today: 'Bugun!', ring_center: 'sikl',
+    tracked: 'Jami kuzatilgan:', cycles_unit: 'ta sikl',
+    leg_period: 'Sehrli kunlar', leg_glow: 'Nur kuni', leg_pms: 'Sezgir kunlar',
+    day_names: ['Du','Se','Ch','Pe','Ju','Sh','Ya'],
+    history_title: 'Sikl tarixi', no_cycles: "Hali sikl yo'q 🌸",
+    cycle_num: (n) => `${n}-sikl`,
+    no_symptoms: "Hali simptom yo'q 🌸",
+    pain_title: "Og'riq darajasi (so'nggi 30 kun)", mood_title: 'Kayfiyat dinamikasi',
+    saved: 'Saqlandi ✓',
+  },
+  ru: {
+    tab_overview: '✨ Обзор', tab_calendar: '📅 Календарь',
+    tab_history: '📋 История', tab_mood: '💕 Настроение',
+    loading: 'Загрузка 🌸', open_in_tg: 'Открой через Telegram 🌸',
+    header_next: (n) => `Волшебные дни через ${n} дн.`,
+    header_started: 'Волшебные дни начались!', header_none: 'Нет данных',
+    avg_cycle: 'Средний цикл', period_days: 'Волшебные дни',
+    next_lbl: 'Следующие ✨', glow_lbl: 'День сияния 💫',
+    days: 'дн.', today: 'Сегодня!', ring_center: 'цикл',
+    tracked: 'Всего отслежено:', cycles_unit: 'цикл(ов)',
+    leg_period: 'Волшебные дни', leg_glow: 'День сияния', leg_pms: 'Чувств. дни',
+    day_names: ['Пн','Вт','Ср','Чт','Пт','Сб','Вс'],
+    history_title: 'История циклов', no_cycles: 'Циклов пока нет 🌸',
+    cycle_num: (n) => `${n}-й цикл`,
+    no_symptoms: 'Симптомов пока нет 🌸',
+    pain_title: 'Уровень боли (последние 30 дней)', mood_title: 'Динамика настроения',
+    saved: 'Сохранено ✓',
+  },
+  en: {
+    tab_overview: '✨ Overview', tab_calendar: '📅 Calendar',
+    tab_history: '📋 History', tab_mood: '💕 Mood',
+    loading: 'Loading 🌸', open_in_tg: 'Open via Telegram 🌸',
+    header_next: (n) => `Magical days in ${n} days`,
+    header_started: 'Magical days started!', header_none: 'No data',
+    avg_cycle: 'Avg cycle', period_days: 'Magical days',
+    next_lbl: 'Next ✨', glow_lbl: 'Glow day 💫',
+    days: 'days', today: 'Today!', ring_center: 'cycle',
+    tracked: 'Total tracked:', cycles_unit: 'cycle(s)',
+    leg_period: 'Magical days', leg_glow: 'Glow day', leg_pms: 'Sensitive days',
+    day_names: ['Mo','Tu','We','Th','Fr','Sa','Su'],
+    history_title: 'Cycle history', no_cycles: 'No cycles yet 🌸',
+    cycle_num: (n) => `Cycle ${n}`,
+    no_symptoms: 'No symptoms yet 🌸',
+    pain_title: 'Pain level (last 30 days)', mood_title: 'Mood dynamics',
+    saved: 'Saved ✓',
+  },
+  kk: {
+    tab_overview: '✨ Жалпы', tab_calendar: '📅 Күнтізбе',
+    tab_history: '📋 Тарих', tab_mood: '💕 Көңіл-күй',
+    loading: 'Жүктелуде 🌸', open_in_tg: 'Telegram арқылы аш 🌸',
+    header_next: (n) => `Сиқырлы күндер ${n} күннен кейін`,
+    header_started: 'Сиқырлы күндер басталды!', header_none: 'Деректер жоқ',
+    avg_cycle: 'Орташа цикл', period_days: 'Сиқырлы күндер',
+    next_lbl: 'Келесі ✨', glow_lbl: 'Жарқын күн 💫',
+    days: 'күн', today: 'Бүгін!', ring_center: 'цикл',
+    tracked: 'Барлығы бақыланған:', cycles_unit: 'цикл',
+    leg_period: 'Сиқырлы күндер', leg_glow: 'Жарқын күн', leg_pms: 'Сезімтал күндер',
+    day_names: ['Дс','Сс','Ср','Бс','Жм','Сн','Жк'],
+    history_title: 'Цикл тарихы', no_cycles: 'Циклдер жоқ 🌸',
+    cycle_num: (n) => `${n}-цикл`,
+    no_symptoms: 'Симптомдар жоқ 🌸',
+    pain_title: 'Ауырсыну деңгейі (соңғы 30 күн)', mood_title: 'Көңіл-күй динамикасы',
+    saved: 'Сақталды ✓',
+  },
+  tg: {
+    tab_overview: '✨ Умумӣ', tab_calendar: '📅 Тақвим',
+    tab_history: '📋 Таърих', tab_mood: '💕 Кайфият',
+    loading: 'Боргузорӣ 🌸', open_in_tg: 'Тавассути Telegram кушо 🌸',
+    header_next: (n) => `Рӯзҳои ҷодугарӣ баъди ${n} рӯз`,
+    header_started: 'Рӯзҳои ҷодугарӣ оғоз шуд!', header_none: 'Маълумот нест',
+    avg_cycle: 'Давраи миёна', period_days: 'Рӯзҳои ҷодугарӣ',
+    next_lbl: 'Оянда ✨', glow_lbl: 'Рӯзи дурахшон 💫',
+    days: 'рӯз', today: 'Имрӯз!', ring_center: 'давра',
+    tracked: 'Ҳамагӣ назорат:', cycles_unit: 'давра',
+    leg_period: 'Рӯзҳои ҷодугарӣ', leg_glow: 'Рӯзи дурахшон', leg_pms: 'Рӯзҳои ҳассос',
+    day_names: ['Дш','Сш','Чш','Пш','Ҷм','Шн','Яш'],
+    history_title: 'Таърихи давра', no_cycles: 'Давра нест 🌸',
+    cycle_num: (n) => `Давраи ${n}`,
+    no_symptoms: 'Ҳанӯз аломат нест 🌸',
+    pain_title: 'Дараҷаи дард (30 рӯзи охир)', mood_title: 'Динамикаи кайфият',
+    saved: 'Сабт шуд ✓',
+  },
+  ky: {
+    tab_overview: '✨ Жалпы', tab_calendar: '📅 Күнтөркүн',
+    tab_history: '📋 Тарых', tab_mood: '💕 Маанай',
+    loading: 'Жүктөлүүдө 🌸', open_in_tg: 'Telegram аркылуу ач 🌸',
+    header_next: (n) => `Сыйкырлуу күндөр ${n} күндөн кийин`,
+    header_started: 'Сыйкырлуу күндөр башталды!', header_none: 'Маалымат жок',
+    avg_cycle: 'Орточо цикл', period_days: 'Сыйкырлуу күндөр',
+    next_lbl: 'Кийинки ✨', glow_lbl: 'Жарык күн 💫',
+    days: 'күн', today: 'Бүгүн!', ring_center: 'цикл',
+    tracked: 'Жалпы байкалган:', cycles_unit: 'цикл',
+    leg_period: 'Сыйкырлуу күндөр', leg_glow: 'Жарык күн', leg_pms: 'Сезгич күндөр',
+    day_names: ['Дш','Шш','Ср','Бш','Жм','Иш','Жк'],
+    history_title: 'Цикл тарыхы', no_cycles: 'Цикл жок 🌸',
+    cycle_num: (n) => `${n}-цикл`,
+    no_symptoms: 'Симптом жок 🌸',
+    pain_title: 'Оору деңгээли (акыркы 30 күн)', mood_title: 'Маанай динамикасы',
+    saved: 'Сакталды ✓',
+  },
+};
+
+function getLang() {
+  return localStorage.getItem('miniapp_lang') || (DATA && DATA.user.language) || 'uz';
+}
+
+function setLang(code) {
+  localStorage.setItem('miniapp_lang', code);
+  document.querySelectorAll('.lang-btn').forEach(b =>
+    b.classList.toggle('active', b.dataset.lang === code)
+  );
+  const msg = document.getElementById('saved-msg');
+  msg.textContent = (LABELS[code] || LABELS.uz).saved;
+  setTimeout(() => { msg.textContent = ''; }, 1500);
+  applyTabLabels();
+  if (DATA) renderAll();
+}
+
+function applyTabLabels() {
+  const L = LABELS[getLang()] || LABELS.uz;
+  document.getElementById('tb-overview').textContent = L.tab_overview;
+  document.getElementById('tb-calendar').textContent = L.tab_calendar;
+  document.getElementById('tb-history').textContent = L.tab_history;
+  document.getElementById('tb-mood').textContent = L.tab_mood;
+  document.getElementById('tb-settings').textContent = '⚙️';
+}
+
+function markActiveLangBtn() {
+  const cur = getLang();
+  document.querySelectorAll('.lang-btn').forEach(b =>
+    b.classList.toggle('active', b.dataset.lang === cur)
+  );
+}
+
+// ── Core ──────────────────────────────────────────────
 async function loadData() {
   if (!userId) {
-    document.getElementById('overview-content').innerHTML = '<p style="text-align:center;padding:2rem;color:var(--accent)">Telegram orqali oching 🌸</p>';
+    document.getElementById('overview-content').innerHTML =
+      `<p style="text-align:center;padding:2rem;color:var(--accent)">${(LABELS[getLang()]||LABELS.uz).open_in_tg}</p>`;
     return;
   }
   try {
     const res = await fetch(`${API_BASE}/api/user/${userId}/data`);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     DATA = await res.json();
+    if (!localStorage.getItem('miniapp_lang')) {
+      localStorage.setItem('miniapp_lang', DATA.user.language || 'uz');
+    }
+    applyTabLabels();
+    markActiveLangBtn();
     renderAll();
   } catch(e) {
-    document.getElementById('overview-content').innerHTML = `<p style="text-align:center;padding:2rem;color:var(--text-mid)">Xatolik: ${e.message} 🥺</p>`;
+    document.getElementById('overview-content').innerHTML =
+      `<p style="text-align:center;padding:2rem;color:var(--text-mid)">Xatolik: ${e.message} 🥺</p>`;
   }
 }
 
 function showTab(name) {
-  document.querySelectorAll('.tab').forEach((t,i) => t.classList.toggle('active', ['overview','calendar','history','mood'][i] === name));
+  const tabs = ['overview','calendar','history','mood','settings'];
+  document.querySelectorAll('.tab').forEach((t, i) => t.classList.toggle('active', tabs[i] === name));
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.getElementById('tab-' + name).classList.add('active');
 }
@@ -253,13 +327,12 @@ function showTab(name) {
 function fmt(dateStr) {
   if (!dateStr) return '—';
   const d = new Date(dateStr);
-  return d.toLocaleDateString('uz-UZ', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  return d.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' });
 }
 
 function daysUntil(dateStr) {
   if (!dateStr) return null;
-  const diff = Math.ceil((new Date(dateStr) - new Date()) / 86400000);
-  return diff;
+  return Math.ceil((new Date(dateStr) - new Date()) / 86400000);
 }
 
 function renderAll() {
@@ -271,17 +344,17 @@ function renderAll() {
 }
 
 function renderOverview() {
+  const L = LABELS[getLang()] || LABELS.uz;
   const { user, predictions, cycles } = DATA;
   const nextDays = daysUntil(predictions.next_period);
   const ovDays = daysUntil(predictions.ovulation);
-
   const ringPct = nextDays != null
     ? Math.max(0, Math.min(100, Math.round((1 - nextDays / user.avg_cycle_length) * 100)))
     : 0;
 
   document.getElementById('header-sub').textContent = nextDays != null
-    ? (nextDays > 0 ? `${nextDays} kundan keyin sehrli kunlar` : 'Sehrli kunlar boshlandi!')
-    : 'Ma\'lumot yo\'q';
+    ? (nextDays > 0 ? L.header_next(nextDays) : L.header_started)
+    : L.header_none;
 
   document.getElementById('overview-content').innerHTML = `
     <div class="ring-wrap">
@@ -289,58 +362,47 @@ function renderOverview() {
     </div>
     <div class="stat-grid">
       <div class="stat-card">
-        <div class="stat-label">O'rtacha sikl</div>
+        <div class="stat-label">${L.avg_cycle}</div>
         <div class="stat-value">${user.avg_cycle_length}</div>
-        <div class="stat-unit">kun</div>
+        <div class="stat-unit">${L.days}</div>
       </div>
       <div class="stat-card">
-        <div class="stat-label">Sehrli kunlar</div>
+        <div class="stat-label">${L.period_days}</div>
         <div class="stat-value">${user.avg_period_length}</div>
-        <div class="stat-unit">kun</div>
+        <div class="stat-unit">${L.days}</div>
       </div>
       <div class="stat-card">
-        <div class="stat-label">Keyingi ✨</div>
+        <div class="stat-label">${L.next_lbl}</div>
         <div class="stat-value" style="font-size:15px">${fmt(predictions.next_period)}</div>
-        <div class="stat-unit">${nextDays != null ? (nextDays > 0 ? nextDays + ' kun' : 'Bugun!') : '—'}</div>
+        <div class="stat-unit">${nextDays != null ? (nextDays > 0 ? nextDays + ' ' + L.days : L.today) : '—'}</div>
       </div>
       <div class="stat-card">
-        <div class="stat-label">Nur kuni 💫</div>
+        <div class="stat-label">${L.glow_lbl}</div>
         <div class="stat-value" style="font-size:15px">${fmt(predictions.ovulation)}</div>
-        <div class="stat-unit">${ovDays != null ? (ovDays > 0 ? ovDays + ' kun' : 'Bugun!') : '—'}</div>
+        <div class="stat-unit">${ovDays != null ? (ovDays > 0 ? ovDays + ' ' + L.days : L.today) : '—'}</div>
       </div>
     </div>
     <p style="text-align:center;font-size:12px;color:var(--text-soft);margin-top:4px">
-      Jami kuzatilgan: <b style="color:var(--text-dark)">${cycles.length}</b> ta sikl
+      ${L.tracked} <b style="color:var(--text-dark)">${cycles.length}</b> ${L.cycles_unit}
     </p>
   `;
 
   const ctx = document.getElementById('ringChart').getContext('2d');
   new Chart(ctx, {
     type: 'doughnut',
-    data: {
-      datasets: [{
-        data: [ringPct, 100 - ringPct],
-        backgroundColor: ['#f43f5e', '#f0f0f0'],
-        borderWidth: 0,
-      }]
-    },
-    options: {
-      cutout: '72%',
-      plugins: { legend: { display: false }, tooltip: { enabled: false } },
-    },
+    data: { datasets: [{ data: [ringPct, 100 - ringPct], backgroundColor: ['#f43f5e','#f0f0f0'], borderWidth: 0 }] },
+    options: { cutout: '72%', plugins: { legend: { display: false }, tooltip: { enabled: false } } },
     plugins: [{
       id: 'center',
       beforeDraw(chart) {
         const { ctx, chartArea: { width, height, left, top } } = chart;
         ctx.save();
         ctx.font = '600 28px -apple-system, sans-serif';
-        ctx.fillStyle = '#1a1a1a';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
+        ctx.fillStyle = '#1a1a1a'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
         ctx.fillText(ringPct + '%', left + width / 2, top + height / 2 - 8);
         ctx.font = '12px -apple-system, sans-serif';
         ctx.fillStyle = '#a0a0a0';
-        ctx.fillText('sikl', left + width / 2, top + height / 2 + 18);
+        ctx.fillText(L.ring_center, left + width / 2, top + height / 2 + 18);
         ctx.restore();
       }
     }]
@@ -348,9 +410,9 @@ function renderOverview() {
 }
 
 function renderCalendar() {
+  const L = LABELS[getLang()] || LABELS.uz;
   const today = new Date();
-  const year = today.getFullYear();
-  const month = today.getMonth();
+  const year = today.getFullYear(), month = today.getMonth();
   const firstDay = new Date(year, month, 1).getDay();
   const daysInMonth = new Date(year, month + 1, 0).getDate();
 
@@ -361,8 +423,7 @@ function renderCalendar() {
     let d = new Date(c.start_date);
     const end = new Date(c.end_date);
     while (d <= end) {
-      if (d.getFullYear() === year && d.getMonth() === month)
-        periodDates.add(d.getDate());
+      if (d.getFullYear() === year && d.getMonth() === month) periodDates.add(d.getDate());
       d.setDate(d.getDate() + 1);
     }
   });
@@ -371,21 +432,18 @@ function renderCalendar() {
   const pmsDate = predictions.pms_start ? new Date(predictions.pms_start) : null;
   const nextPeriod = predictions.next_period ? new Date(predictions.next_period) : null;
 
-  const dayNames = ['Du', 'Se', 'Ch', 'Pe', 'Ju', 'Sh', 'Ya'];
   let html = `
     <div class="legend">
-      <span class="leg"><span class="leg-dot" style="background:#f43f5e"></span>Sehrli kunlar</span>
-      <span class="leg"><span class="leg-dot" style="background:#ffe4e9"></span>Nur kuni</span>
-      <span class="leg"><span class="leg-dot" style="background:#f5f5f7;border:0.5px solid #ddd"></span>Sezgir kunlar</span>
+      <span class="leg"><span class="leg-dot" style="background:#f43f5e"></span>${L.leg_period}</span>
+      <span class="leg"><span class="leg-dot" style="background:#ffe4e9"></span>${L.leg_glow}</span>
+      <span class="leg"><span class="leg-dot" style="background:#f5f5f7;border:0.5px solid #ddd"></span>${L.leg_pms}</span>
     </div>
-    <div class="card" style="padding:12px">
-      <div class="calendar-grid">
+    <div class="card" style="padding:12px"><div class="calendar-grid">
   `;
-  dayNames.forEach(d => html += `<div class="cal-day-name">${d}</div>`);
+  L.day_names.forEach(d => html += `<div class="cal-day-name">${d}</div>`);
 
   const startPad = (firstDay + 6) % 7;
   for (let i = 0; i < startPad; i++) html += `<div class="cal-day empty"></div>`;
-
   for (let d = 1; d <= daysInMonth; d++) {
     const cur = new Date(year, month, d);
     let cls = 'cal-day';
@@ -401,20 +459,22 @@ function renderCalendar() {
 }
 
 function renderHistory() {
+  const L = LABELS[getLang()] || LABELS.uz;
   const { cycles } = DATA;
   if (!cycles.length) {
-    document.getElementById('history-content').innerHTML = '<p style="text-align:center;padding:2rem;color:var(--text-mid)">Hali sikl yo\'q 🌸</p>';
+    document.getElementById('history-content').innerHTML =
+      `<p style="text-align:center;padding:2rem;color:var(--text-mid)">${L.no_cycles}</p>`;
     return;
   }
-  let html = '<p class="section-title">Sikl tarixi</p>';
+  let html = `<p class="section-title">${L.history_title}</p>`;
   cycles.slice(0, 12).forEach((c, i) => {
     html += `
       <div class="cycle-row">
         <div class="cycle-dates">
           <div style="font-size:13px;color:var(--text-dark)">${fmt(c.start_date)} → ${c.end_date ? fmt(c.end_date) : '...'}</div>
-          <div style="font-size:11px;color:var(--text-soft);margin-top:2px">${i + 1}-sikl</div>
+          <div style="font-size:11px;color:var(--text-soft);margin-top:2px">${L.cycle_num(i + 1)}</div>
         </div>
-        ${c.cycle_length ? `<span class="cycle-len">${c.cycle_length} kun</span>` : ''}
+        ${c.cycle_length ? `<span class="cycle-len">${c.cycle_length} ${L.days}</span>` : ''}
       </div>
     `;
   });
@@ -422,9 +482,11 @@ function renderHistory() {
 }
 
 function renderMood() {
+  const L = LABELS[getLang()] || LABELS.uz;
   const { symptoms } = DATA;
   if (!symptoms.length) {
-    document.getElementById('mood-content').innerHTML = '<p style="text-align:center;padding:2rem;color:var(--text-mid)">Hali simptom yo\'q 🌸</p>';
+    document.getElementById('mood-content').innerHTML =
+      `<p style="text-align:center;padding:2rem;color:var(--text-mid)">${L.no_symptoms}</p>`;
     return;
   }
   const last30 = symptoms.slice(0, 30).reverse();
@@ -435,34 +497,28 @@ function renderMood() {
 
   document.getElementById('mood-content').innerHTML = `
     <div class="chart-wrap">
-      <div class="chart-title">Og'riq darajasi (so'nggi 30 kun)</div>
+      <div class="chart-title">${L.pain_title}</div>
       <canvas id="painChart" height="120"></canvas>
     </div>
     <div class="chart-wrap">
-      <div class="chart-title">Kayfiyat dinamikasi</div>
+      <div class="chart-title">${L.mood_title}</div>
       <canvas id="moodChart" height="120"></canvas>
     </div>
   `;
 
   new Chart(document.getElementById('painChart'), {
     type: 'bar',
-    data: {
-      labels,
-      datasets: [{ data: pain, backgroundColor: '#ffe4e9', borderColor: '#f43f5e', borderWidth: 1, borderRadius: 4, borderSkipped: false }]
-    },
+    data: { labels, datasets: [{ data: pain, backgroundColor: '#ffe4e9', borderColor: '#f43f5e', borderWidth: 1, borderRadius: 4, borderSkipped: false }] },
     options: { plugins: { legend: { display: false } }, scales: { y: { max: 5, min: 0, ticks: { stepSize: 1 } } } }
   });
-
   new Chart(document.getElementById('moodChart'), {
     type: 'line',
-    data: {
-      labels,
-      datasets: [{ data: moodVals, borderColor: '#f43f5e', backgroundColor: 'rgba(244,63,94,0.08)', tension: 0.4, fill: true, pointRadius: 3, pointBackgroundColor: '#f43f5e' }]
-    },
+    data: { labels, datasets: [{ data: moodVals, borderColor: '#f43f5e', backgroundColor: 'rgba(244,63,94,0.08)', tension: 0.4, fill: true, pointRadius: 3, pointBackgroundColor: '#f43f5e' }] },
     options: { plugins: { legend: { display: false } }, scales: { y: { max: 5, min: 0, ticks: { stepSize: 1 } } } }
   });
 }
 
+applyTabLabels();
 loadData();
 </script>
 </body>
