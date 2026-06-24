@@ -235,13 +235,12 @@ async function loadData() {
     return;
   }
   try {
-    const res = await fetch(`${API_BASE}/api/user/${userId}/data`, {
-      headers: { 'X-Secret': tg.initData }
-    });
+    const res = await fetch(`${API_BASE}/api/user/${userId}/data`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
     DATA = await res.json();
     renderAll();
   } catch(e) {
-    document.getElementById('overview-content').innerHTML = '<p style="text-align:center;padding:2rem;color:var(--text-mid)">Xatolik yuz berdi 🥺</p>';
+    document.getElementById('overview-content').innerHTML = `<p style="text-align:center;padding:2rem;color:var(--text-mid)">Xatolik: ${e.message} 🥺</p>`;
   }
 }
 

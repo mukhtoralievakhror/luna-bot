@@ -16,7 +16,7 @@ app = FastAPI(title="Luna Bot API")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://mukhtoralievakhror.github.io", "http://localhost:3000"],
+    allow_origins=["*"],
     allow_methods=["GET"],
     allow_headers=["*"],
 )
