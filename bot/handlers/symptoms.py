@@ -62,6 +62,5 @@ async def got_mood(call: CallbackQuery, state: FSMContext):
         await upsert_symptom(session, call.from_user.id, mood=mood)
         user = await get_or_create_user(session, call.from_user.id)
     await call.message.edit_text(t(lang, "symptom_saved"))
-    await call.message.answer(t(lang, "main_menu", name=call.from_user.first_name or "gulim", status=""),
-                               reply_markup=main_menu(lang), parse_mode="HTML")
+    await call.message.answer("🌸", reply_markup=main_menu(lang))
     await state.clear()
