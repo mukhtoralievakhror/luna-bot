@@ -66,6 +66,7 @@
     .cal-day.period { background: var(--accent); color: white; }
     .cal-day.ovulation { background: var(--accent-light); color: var(--accent); }
     .cal-day.pms { background: var(--surface); color: var(--text-mid); border: 0.5px solid var(--border); }
+    .cal-day.fertile { background: #d1fae5; color: #065f46; }
     .cal-day.today { font-weight: 600; border: 2px solid var(--accent); }
     .cal-day.empty { opacity: 0; }
     .legend { display: flex; gap: 12px; flex-wrap: wrap; margin: 10px 0; }
@@ -162,7 +163,7 @@ const LABELS = {
     next_lbl: 'Keyingi ✨', glow_lbl: 'Nur kuni 💫',
     days: 'kun', today: 'Bugun!', ring_center: 'sikl',
     tracked: 'Jami kuzatilgan:', cycles_unit: 'ta sikl',
-    leg_period: 'Sehrli kunlar', leg_glow: 'Nur kuni', leg_pms: 'Sezgir kunlar',
+    leg_period: 'Sehrli kunlar', leg_fertile: 'Nur davri', leg_glow: 'Nur kuni', leg_pms: 'Sezgir kunlar',
     day_names: ['Du','Se','Ch','Pe','Ju','Sh','Ya'],
     history_title: 'Sikl tarixi', no_cycles: "Hali sikl yo'q 🌸",
     cycle_num: (n) => `${n}-sikl`,
@@ -180,7 +181,7 @@ const LABELS = {
     next_lbl: 'Следующие ✨', glow_lbl: 'День сияния 💫',
     days: 'дн.', today: 'Сегодня!', ring_center: 'цикл',
     tracked: 'Всего отслежено:', cycles_unit: 'цикл(ов)',
-    leg_period: 'Волшебные дни', leg_glow: 'День сияния', leg_pms: 'Чувств. дни',
+    leg_period: 'Волшебные дни', leg_fertile: 'Фертильные дни', leg_glow: 'День сияния', leg_pms: 'Чувств. дни',
     day_names: ['Пн','Вт','Ср','Чт','Пт','Сб','Вс'],
     history_title: 'История циклов', no_cycles: 'Циклов пока нет 🌸',
     cycle_num: (n) => `${n}-й цикл`,
@@ -198,7 +199,7 @@ const LABELS = {
     next_lbl: 'Next ✨', glow_lbl: 'Glow day 💫',
     days: 'days', today: 'Today!', ring_center: 'cycle',
     tracked: 'Total tracked:', cycles_unit: 'cycle(s)',
-    leg_period: 'Magical days', leg_glow: 'Glow day', leg_pms: 'Sensitive days',
+    leg_period: 'Magical days', leg_fertile: 'Fertile days', leg_glow: 'Glow day', leg_pms: 'Sensitive days',
     day_names: ['Mo','Tu','We','Th','Fr','Sa','Su'],
     history_title: 'Cycle history', no_cycles: 'No cycles yet 🌸',
     cycle_num: (n) => `Cycle ${n}`,
@@ -216,7 +217,7 @@ const LABELS = {
     next_lbl: 'Келесі ✨', glow_lbl: 'Жарқын күн 💫',
     days: 'күн', today: 'Бүгін!', ring_center: 'цикл',
     tracked: 'Барлығы бақыланған:', cycles_unit: 'цикл',
-    leg_period: 'Сиқырлы күндер', leg_glow: 'Жарқын күн', leg_pms: 'Сезімтал күндер',
+    leg_period: 'Сиқырлы күндер', leg_fertile: 'Фертилді күндер', leg_glow: 'Жарқын күн', leg_pms: 'Сезімтал күндер',
     day_names: ['Дс','Сс','Ср','Бс','Жм','Сн','Жк'],
     history_title: 'Цикл тарихы', no_cycles: 'Циклдер жоқ 🌸',
     cycle_num: (n) => `${n}-цикл`,
@@ -234,7 +235,7 @@ const LABELS = {
     next_lbl: 'Оянда ✨', glow_lbl: 'Рӯзи дурахшон 💫',
     days: 'рӯз', today: 'Имрӯз!', ring_center: 'давра',
     tracked: 'Ҳамагӣ назорат:', cycles_unit: 'давра',
-    leg_period: 'Рӯзҳои ҷодугарӣ', leg_glow: 'Рӯзи дурахшон', leg_pms: 'Рӯзҳои ҳассос',
+    leg_period: 'Рӯзҳои ҷодугарӣ', leg_fertile: 'Рӯзҳои фертилӣ', leg_glow: 'Рӯзи дурахшон', leg_pms: 'Рӯзҳои ҳассос',
     day_names: ['Дш','Сш','Чш','Пш','Ҷм','Шн','Яш'],
     history_title: 'Таърихи давра', no_cycles: 'Давра нест 🌸',
     cycle_num: (n) => `Давраи ${n}`,
@@ -252,7 +253,7 @@ const LABELS = {
     next_lbl: 'Кийинки ✨', glow_lbl: 'Жарык күн 💫',
     days: 'күн', today: 'Бүгүн!', ring_center: 'цикл',
     tracked: 'Жалпы байкалган:', cycles_unit: 'цикл',
-    leg_period: 'Сыйкырлуу күндөр', leg_glow: 'Жарык күн', leg_pms: 'Сезгич күндөр',
+    leg_period: 'Сыйкырлуу күндөр', leg_fertile: 'Фертилдик күндөр', leg_glow: 'Жарык күн', leg_pms: 'Сезгич күндөр',
     day_names: ['Дш','Шш','Ср','Бш','Жм','Иш','Жк'],
     history_title: 'Цикл тарыхы', no_cycles: 'Цикл жок 🌸',
     cycle_num: (n) => `${n}-цикл`,
@@ -429,12 +430,14 @@ function renderCalendar() {
   });
 
   const ovDate = predictions.ovulation ? new Date(predictions.ovulation) : null;
+  const fertileStart = ovDate ? new Date(ovDate.getTime() - 5 * 86400000) : null;
   const pmsDate = predictions.pms_start ? new Date(predictions.pms_start) : null;
   const nextPeriod = predictions.next_period ? new Date(predictions.next_period) : null;
 
   let html = `
     <div class="legend">
       <span class="leg"><span class="leg-dot" style="background:#f43f5e"></span>${L.leg_period}</span>
+      <span class="leg"><span class="leg-dot" style="background:#d1fae5;border:0.5px solid #6ee7b7"></span>${L.leg_fertile}</span>
       <span class="leg"><span class="leg-dot" style="background:#ffe4e9"></span>${L.leg_glow}</span>
       <span class="leg"><span class="leg-dot" style="background:#f5f5f7;border:0.5px solid #ddd"></span>${L.leg_pms}</span>
     </div>
@@ -450,6 +453,7 @@ function renderCalendar() {
     if (periodDates.has(d)) cls += ' period';
     else if (nextPeriod && cur >= nextPeriod && cur < new Date(nextPeriod.getTime() + DATA.user.avg_period_length * 86400000)) cls += ' period';
     else if (ovDate && cur.toDateString() === ovDate.toDateString()) cls += ' ovulation';
+    else if (fertileStart && ovDate && cur >= fertileStart && cur < ovDate) cls += ' fertile';
     else if (pmsDate && cur >= pmsDate && ovDate && cur <= ovDate) cls += ' pms';
     if (cur.toDateString() === today.toDateString()) cls += ' today';
     html += `<div class="${cls}">${d}</div>`;
