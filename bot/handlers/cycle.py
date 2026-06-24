@@ -1,5 +1,6 @@
 from datetime import date
 from aiogram import Router, F
+from aiogram.fsm.context import FSMContext
 from aiogram.types import Message
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -22,7 +23,7 @@ def _is_btn(text: str, mapping: dict) -> bool:
 
 
 @router.message(F.text.func(lambda t: _is_btn(t, BTN_START)))
-async def handle_start(message: Message):
+async def handle_start(message: Message, state: FSMContext):
     async with async_session() as session:
         user = await get_or_create_user(session, message.from_user.id)
         lang = user.language
@@ -30,6 +31,7 @@ async def handle_start(message: Message):
     if cycle is None:
         await message.answer(t(lang, "cycle_already_active"))
         return
+    await state.update_data(lang=lang, user_id=message.from_user.id)
     await message.answer(t(lang, "cycle_started"), reply_markup=flow_keyboard(lang), parse_mode="HTML")
 
 
