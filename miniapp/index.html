@@ -8,105 +8,146 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <style>
     :root {
-      --pink: #C97AAA;
-      --pink-light: #F4C0D1;
-      --pink-bg: #FDF6FA;
-      --pink-dark: #7A2050;
-      --pink-border: #E8C8DC;
-      --text: #4A2040;
-      --text-muted: #9A6080;
+      --accent: #f43f5e;
+      --accent-light: #ffe4e9;
+      --surface: #f5f5f7;
+      --border: rgba(0,0,0,0.08);
+      --text-dark: #1a1a1a;
+      --text-mid: #6b6b6b;
+      --text-soft: #a0a0a0;
+      --white: #ffffff;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-      background: var(--tg-theme-bg-color, var(--pink-bg));
-      color: var(--tg-theme-text-color, var(--text));
+      background: var(--surface);
+      color: var(--text-dark);
       min-height: 100vh;
       padding-bottom: 2rem;
     }
-    .header {
-      background: var(--pink);
-      color: white;
-      padding: 1rem 1.25rem 0.75rem;
-      display: flex;
-      align-items: center;
-      gap: 10px;
+
+    /* HERO HEADER */
+    .hero {
+      position: relative;
+      overflow: hidden;
+      height: 130px;
+      background: linear-gradient(140deg, #fce4ec 0%, #f8bbd0 50%, #ede7f6 100%);
     }
-    .header-logo { font-size: 24px; }
-    .header h1 { font-size: 18px; font-weight: 500; }
-    .header p { font-size: 12px; opacity: 0.85; }
+    .hero-orb1 {
+      position: absolute; width: 130px; height: 130px; border-radius: 50%;
+      background: rgba(244,63,94,0.18); top: -35px; right: -25px;
+    }
+    .hero-orb2 {
+      position: absolute; width: 80px; height: 80px; border-radius: 50%;
+      background: rgba(244,63,94,0.10); top: 15px; right: 45px;
+    }
+    .hero-moon {
+      position: absolute; right: 18px; top: 8px;
+      font-size: 58px; opacity: 0.22; filter: blur(1px); line-height: 1;
+    }
+    .hero-glass {
+      position: absolute; bottom: 0; left: 0; right: 0;
+      padding: 10px 16px;
+      background: rgba(255,255,255,0.60);
+      backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .hero-title { font-size: 16px; font-weight: 600; color: var(--text-dark); }
+    .hero-sub { font-size: 12px; color: var(--text-mid); margin-top: 1px; }
+
+    /* TABS */
     .tabs {
       display: flex;
-      background: white;
-      border-bottom: 1px solid var(--pink-border);
+      background: var(--white);
+      border-bottom: 0.5px solid var(--border);
       overflow-x: auto;
     }
     .tab {
       flex: 1;
-      padding: 10px 8px;
+      padding: 10px 6px;
       border: none;
       background: none;
-      font-size: 13px;
-      color: var(--text-muted);
+      font-size: 12px;
+      color: var(--text-soft);
       cursor: pointer;
       white-space: nowrap;
       border-bottom: 2px solid transparent;
     }
     .tab.active {
-      color: var(--pink);
-      border-bottom-color: var(--pink);
+      color: var(--accent);
+      border-bottom-color: var(--accent);
       font-weight: 500;
     }
-    .page { display: none; padding: 1rem; }
+
+    .page { display: none; padding: 14px; }
     .page.active { display: block; }
 
-    .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 1rem; }
-    .stat-card {
-      background: white;
-      border: 1px solid var(--pink-border);
+    /* CARDS */
+    .card {
+      background: var(--white);
+      border: 0.5px solid var(--border);
       border-radius: 14px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+      padding: 14px;
+      margin-bottom: 12px;
+    }
+
+    /* STAT GRID */
+    .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+    .stat-card {
+      background: var(--white);
+      border: 0.5px solid var(--border);
+      border-radius: 14px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
       padding: 14px 12px;
       text-align: center;
     }
-    .stat-label { font-size: 11px; color: var(--text-muted); margin-bottom: 4px; }
-    .stat-value { font-size: 22px; font-weight: 500; color: var(--pink-dark); }
-    .stat-unit { font-size: 11px; color: var(--text-muted); }
+    .stat-label { font-size: 10px; color: var(--text-soft); margin-bottom: 4px; font-weight: 500; text-transform: uppercase; letter-spacing: .3px; }
+    .stat-value { font-size: 22px; font-weight: 600; color: var(--text-dark); }
+    .stat-unit { font-size: 11px; color: var(--text-mid); margin-top: 2px; }
 
-    .ring-wrap { display: flex; justify-content: center; margin: 1rem 0; }
-    canvas.ring { max-width: 200px; }
+    /* RING */
+    .ring-wrap { display: flex; justify-content: center; margin: 14px 0; }
+    canvas.ring { max-width: 180px; }
 
+    /* SECTION TITLE */
     .section-title {
-      font-size: 14px;
-      font-weight: 500;
-      color: var(--text);
-      margin: 1rem 0 0.5rem;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-dark);
+      margin: 4px 0 10px;
     }
+
+    /* CYCLE ROW */
     .cycle-row {
-      background: white;
-      border: 1px solid var(--pink-border);
+      background: var(--white);
+      border: 0.5px solid var(--border);
       border-radius: 12px;
-      padding: 12px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+      padding: 12px 14px;
       margin-bottom: 8px;
       display: flex;
       justify-content: space-between;
       align-items: center;
     }
-    .cycle-dates { font-size: 13px; color: var(--text); }
+    .cycle-dates { font-size: 13px; color: var(--text-dark); }
     .cycle-len {
-      font-size: 12px;
-      background: var(--pink-light);
-      color: var(--pink-dark);
+      font-size: 11px;
+      background: var(--accent-light);
+      color: var(--accent);
       padding: 3px 10px;
       border-radius: 20px;
+      font-weight: 500;
     }
 
+    /* CALENDAR */
     .calendar-grid {
       display: grid;
       grid-template-columns: repeat(7, 1fr);
       gap: 4px;
       text-align: center;
     }
-    .cal-day-name { font-size: 10px; color: var(--text-muted); padding: 4px 0; }
+    .cal-day-name { font-size: 10px; color: var(--text-soft); padding: 4px 0; font-weight: 500; }
     .cal-day {
       font-size: 12px;
       padding: 6px 2px;
@@ -116,31 +157,47 @@
       align-items: center;
       justify-content: center;
     }
-    .cal-day.period { background: var(--pink); color: white; }
-    .cal-day.ovulation { background: #FFD6E7; color: var(--pink-dark); border: 1px solid var(--pink); }
-    .cal-day.pms { background: #E8D5F5; color: #6B3FA0; }
-    .cal-day.today { font-weight: 600; border: 1.5px solid var(--pink); }
+    .cal-day.period { background: var(--accent); color: white; }
+    .cal-day.ovulation { background: var(--accent-light); color: var(--accent); }
+    .cal-day.pms { background: var(--surface); color: var(--text-mid); border: 0.5px solid var(--border); }
+    .cal-day.today { font-weight: 600; border: 2px solid var(--accent); }
     .cal-day.empty { opacity: 0; }
 
-    .legend { display: flex; gap: 12px; flex-wrap: wrap; margin: 0.75rem 0; }
-    .leg { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--text-muted); }
+    /* LEGEND */
+    .legend { display: flex; gap: 12px; flex-wrap: wrap; margin: 10px 0; }
+    .leg { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--text-mid); }
     .leg-dot { width: 10px; height: 10px; border-radius: 50%; }
 
-    .loading { text-align: center; padding: 3rem 1rem; color: var(--text-muted); font-size: 14px; }
-    .chart-wrap { background: white; border: 1px solid var(--pink-border); border-radius: 14px; padding: 12px; margin-bottom: 1rem; }
-    .chart-title { font-size: 13px; color: var(--text-muted); margin-bottom: 8px; }
+    /* CHART */
+    .loading { text-align: center; padding: 3rem 1rem; color: var(--text-mid); font-size: 14px; }
+    .chart-wrap {
+      background: var(--white);
+      border: 0.5px solid var(--border);
+      border-radius: 14px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+      padding: 14px;
+      margin-bottom: 12px;
+    }
+    .chart-title { font-size: 12px; font-weight: 600; color: var(--text-dark); margin-bottom: 10px; }
   </style>
 </head>
 <body>
 
-<div class="header">
-  <div class="header-logo">🌸</div>
-  <div>
-    <h1>Luna</h1>
-    <p id="header-sub">Yuklanmoqda...</p>
+<!-- Hero header -->
+<div class="hero">
+  <div class="hero-orb1"></div>
+  <div class="hero-orb2"></div>
+  <div class="hero-moon">🌙</div>
+  <div class="hero-glass">
+    <div>
+      <div class="hero-title">Luna</div>
+      <div class="hero-sub" id="header-sub">Yuklanmoqda...</div>
+    </div>
+    <span style="font-size:20px;">🌸</span>
   </div>
 </div>
 
+<!-- Tabs -->
 <div class="tabs">
   <button class="tab active" onclick="showTab('overview')">✨ Umumiy</button>
   <button class="tab" onclick="showTab('calendar')">📅 Kalendar</button>
@@ -148,6 +205,7 @@
   <button class="tab" onclick="showTab('mood')">💕 Kayfiyat</button>
 </div>
 
+<!-- Pages -->
 <div id="tab-overview" class="page active">
   <div id="overview-content" class="loading">Yuklanmoqda 🌸</div>
 </div>
@@ -173,7 +231,7 @@ let DATA = null;
 
 async function loadData() {
   if (!userId) {
-    document.getElementById('overview-content').innerHTML = '<p style="text-align:center;padding:2rem;color:#C97AAA">Telegram orqali oching 🌸</p>';
+    document.getElementById('overview-content').innerHTML = '<p style="text-align:center;padding:2rem;color:var(--accent)">Telegram orqali oching 🌸</p>';
     return;
   }
   try {
@@ -183,7 +241,7 @@ async function loadData() {
     DATA = await res.json();
     renderAll();
   } catch(e) {
-    document.getElementById('overview-content').innerHTML = '<p style="text-align:center;padding:2rem">Xatolik yuz berdi 🥺</p>';
+    document.getElementById('overview-content').innerHTML = '<p style="text-align:center;padding:2rem;color:var(--text-mid)">Xatolik yuz berdi 🥺</p>';
   }
 }
 
@@ -218,14 +276,17 @@ function renderOverview() {
   const nextDays = daysUntil(predictions.next_period);
   const ovDays = daysUntil(predictions.ovulation);
 
-  const ringPct = nextDays != null ? Math.max(0, Math.min(100, Math.round((1 - nextDays / user.avg_cycle_length) * 100))) : 0;
+  const ringPct = nextDays != null
+    ? Math.max(0, Math.min(100, Math.round((1 - nextDays / user.avg_cycle_length) * 100)))
+    : 0;
+
   document.getElementById('header-sub').textContent = nextDays != null
     ? (nextDays > 0 ? `${nextDays} kundan keyin sehrli kunlar` : 'Sehrli kunlar boshlandi!')
     : 'Ma\'lumot yo\'q';
 
   document.getElementById('overview-content').innerHTML = `
     <div class="ring-wrap">
-      <canvas id="ringChart" class="ring" width="200" height="200"></canvas>
+      <canvas id="ringChart" class="ring" width="180" height="180"></canvas>
     </div>
     <div class="stat-grid">
       <div class="stat-card">
@@ -249,8 +310,8 @@ function renderOverview() {
         <div class="stat-unit">${ovDays != null ? (ovDays > 0 ? ovDays + ' kun' : 'Bugun!') : '—'}</div>
       </div>
     </div>
-    <p style="text-align:center;font-size:12px;color:var(--text-muted);margin-top:0.5rem">
-      Jami kuzatilgan: <b>${cycles.length}</b> ta sikl
+    <p style="text-align:center;font-size:12px;color:var(--text-soft);margin-top:4px">
+      Jami kuzatilgan: <b style="color:var(--text-dark)">${cycles.length}</b> ta sikl
     </p>
   `;
 
@@ -260,29 +321,26 @@ function renderOverview() {
     data: {
       datasets: [{
         data: [ringPct, 100 - ringPct],
-        backgroundColor: ['#C97AAA', '#F4C0D1'],
+        backgroundColor: ['#f43f5e', '#f0f0f0'],
         borderWidth: 0,
       }]
     },
     options: {
       cutout: '72%',
-      plugins: {
-        legend: { display: false },
-        tooltip: { enabled: false },
-      },
+      plugins: { legend: { display: false }, tooltip: { enabled: false } },
     },
     plugins: [{
       id: 'center',
       beforeDraw(chart) {
         const { ctx, chartArea: { width, height, left, top } } = chart;
         ctx.save();
-        ctx.font = '500 28px -apple-system, sans-serif';
-        ctx.fillStyle = '#7A2050';
+        ctx.font = '600 28px -apple-system, sans-serif';
+        ctx.fillStyle = '#1a1a1a';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillText(ringPct + '%', left + width / 2, top + height / 2 - 8);
         ctx.font = '12px -apple-system, sans-serif';
-        ctx.fillStyle = '#9A6080';
+        ctx.fillStyle = '#a0a0a0';
         ctx.fillText('sikl', left + width / 2, top + height / 2 + 18);
         ctx.restore();
       }
@@ -317,11 +375,12 @@ function renderCalendar() {
   const dayNames = ['Du', 'Se', 'Ch', 'Pe', 'Ju', 'Sh', 'Ya'];
   let html = `
     <div class="legend">
-      <span class="leg"><span class="leg-dot" style="background:#C97AAA"></span>Sehrli kunlar</span>
-      <span class="leg"><span class="leg-dot" style="background:#FFD6E7;border:1px solid #C97AAA"></span>Nur kuni</span>
-      <span class="leg"><span class="leg-dot" style="background:#E8D5F5"></span>PMS</span>
+      <span class="leg"><span class="leg-dot" style="background:#f43f5e"></span>Sehrli kunlar</span>
+      <span class="leg"><span class="leg-dot" style="background:#ffe4e9"></span>Nur kuni</span>
+      <span class="leg"><span class="leg-dot" style="background:#f5f5f7;border:0.5px solid #ddd"></span>Sezgir kunlar</span>
     </div>
-    <div class="calendar-grid">
+    <div class="card" style="padding:12px">
+      <div class="calendar-grid">
   `;
   dayNames.forEach(d => html += `<div class="cal-day-name">${d}</div>`);
 
@@ -338,14 +397,14 @@ function renderCalendar() {
     if (cur.toDateString() === today.toDateString()) cls += ' today';
     html += `<div class="${cls}">${d}</div>`;
   }
-  html += '</div>';
+  html += '</div></div>';
   document.getElementById('calendar-content').innerHTML = html;
 }
 
 function renderHistory() {
   const { cycles } = DATA;
   if (!cycles.length) {
-    document.getElementById('history-content').innerHTML = '<p style="text-align:center;padding:2rem;color:var(--text-muted)">Hali sikl yo\'q 🌸</p>';
+    document.getElementById('history-content').innerHTML = '<p style="text-align:center;padding:2rem;color:var(--text-mid)">Hali sikl yo\'q 🌸</p>';
     return;
   }
   let html = '<p class="section-title">Sikl tarixi</p>';
@@ -353,8 +412,8 @@ function renderHistory() {
     html += `
       <div class="cycle-row">
         <div class="cycle-dates">
-          <div style="font-size:13px">${fmt(c.start_date)} → ${c.end_date ? fmt(c.end_date) : '...'}</div>
-          <div style="font-size:11px;color:var(--text-muted)">${i + 1}-sikl</div>
+          <div style="font-size:13px;color:var(--text-dark)">${fmt(c.start_date)} → ${c.end_date ? fmt(c.end_date) : '...'}</div>
+          <div style="font-size:11px;color:var(--text-soft);margin-top:2px">${i + 1}-sikl</div>
         </div>
         ${c.cycle_length ? `<span class="cycle-len">${c.cycle_length} kun</span>` : ''}
       </div>
@@ -366,7 +425,7 @@ function renderHistory() {
 function renderMood() {
   const { symptoms } = DATA;
   if (!symptoms.length) {
-    document.getElementById('mood-content').innerHTML = '<p style="text-align:center;padding:2rem;color:var(--text-muted)">Hali simptom yo\'q 🌸</p>';
+    document.getElementById('mood-content').innerHTML = '<p style="text-align:center;padding:2rem;color:var(--text-mid)">Hali simptom yo\'q 🌸</p>';
     return;
   }
   const last30 = symptoms.slice(0, 30).reverse();
@@ -385,19 +444,21 @@ function renderMood() {
       <canvas id="moodChart" height="120"></canvas>
     </div>
   `;
+
   new Chart(document.getElementById('painChart'), {
     type: 'bar',
     data: {
       labels,
-      datasets: [{ data: pain, backgroundColor: '#F4C0D1', borderRadius: 4, borderSkipped: false }]
+      datasets: [{ data: pain, backgroundColor: '#ffe4e9', borderColor: '#f43f5e', borderWidth: 1, borderRadius: 4, borderSkipped: false }]
     },
     options: { plugins: { legend: { display: false } }, scales: { y: { max: 5, min: 0, ticks: { stepSize: 1 } } } }
   });
+
   new Chart(document.getElementById('moodChart'), {
     type: 'line',
     data: {
       labels,
-      datasets: [{ data: moodVals, borderColor: '#C97AAA', backgroundColor: 'rgba(201,122,170,0.1)', tension: 0.4, fill: true, pointRadius: 3 }]
+      datasets: [{ data: moodVals, borderColor: '#f43f5e', backgroundColor: 'rgba(244,63,94,0.08)', tension: 0.4, fill: true, pointRadius: 3, pointBackgroundColor: '#f43f5e' }]
     },
     options: { plugins: { legend: { display: false } }, scales: { y: { max: 5, min: 0, ticks: { stepSize: 1 } } } }
   });
