@@ -26,7 +26,7 @@ async def show_settings(message: Message):
     async with async_session() as session:
         user = await get_or_create_user(session, message.from_user.id)
         lang = user.language
-        lang_names = {"uz": "O'zbek", "ru": "Русский", "en": "English"}
+        lang_names = {"uz": "O'zbek", "ru": "Русский", "en": "English", "kk": "Қазақша", "tg": "Тоҷикӣ", "ky": "Кыргызча"}
         text = t(lang, "settings_menu",
                  language=lang_names.get(lang, lang),
                  cycle=user.avg_cycle_length,
@@ -94,7 +94,7 @@ async def cancel_reset(call: CallbackQuery):
     async with async_session() as session:
         user = await get_or_create_user(session, call.from_user.id)
         lang = user.language
-        lang_names = {"uz": "O'zbek", "ru": "Русский", "en": "English"}
+        lang_names = {"uz": "O'zbek", "ru": "Русский", "en": "English", "kk": "Қазақша", "tg": "Тоҷикӣ", "ky": "Кыргызча"}
         text = t(lang, "settings_menu",
                  language=lang_names.get(lang, lang),
                  cycle=user.avg_cycle_length,

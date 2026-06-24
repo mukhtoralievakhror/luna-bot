@@ -1,6 +1,13 @@
-from bot.locales import uz, ru, en
+from bot.locales import uz, ru, en, kk, tg, ky
 
-_locales = {"uz": uz.texts, "ru": ru.texts, "en": en.texts}
+_locales = {
+    "uz": uz.texts,
+    "ru": ru.texts,
+    "en": en.texts,
+    "kk": kk.texts,
+    "tg": tg.texts,
+    "ky": ky.texts,
+}
 
 
 def t(lang: str, key: str, **kwargs) -> str:

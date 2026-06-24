@@ -20,7 +20,12 @@ def lang_select() -> InlineKeyboardMarkup:
             InlineKeyboardButton(text="🇺🇿 O'zbek", callback_data="setup_lang:uz"),
             InlineKeyboardButton(text="🇷🇺 Русский", callback_data="setup_lang:ru"),
             InlineKeyboardButton(text="🇬🇧 English", callback_data="setup_lang:en"),
-        ]
+        ],
+        [
+            InlineKeyboardButton(text="🇰🇿 Қазақша", callback_data="setup_lang:kk"),
+            InlineKeyboardButton(text="🇹🇯 Тоҷикӣ", callback_data="setup_lang:tg"),
+            InlineKeyboardButton(text="🇰🇬 Кыргызча", callback_data="setup_lang:ky"),
+        ],
     ])
 
 
@@ -30,7 +35,12 @@ def lang_change_select() -> InlineKeyboardMarkup:
             InlineKeyboardButton(text="🇺🇿 O'zbek", callback_data="change_lang:uz"),
             InlineKeyboardButton(text="🇷🇺 Русский", callback_data="change_lang:ru"),
             InlineKeyboardButton(text="🇬🇧 English", callback_data="change_lang:en"),
-        ]
+        ],
+        [
+            InlineKeyboardButton(text="🇰🇿 Қазақша", callback_data="change_lang:kk"),
+            InlineKeyboardButton(text="🇹🇯 Тоҷикӣ", callback_data="change_lang:tg"),
+            InlineKeyboardButton(text="🇰🇬 Кыргызча", callback_data="change_lang:ky"),
+        ],
     ])
 
 
