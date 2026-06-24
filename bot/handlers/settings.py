@@ -17,8 +17,14 @@ from bot.keyboards.inline import (
 
 router = Router()
 
-BTN_SETTINGS = {"uz": "⚙️ Sozlamalar", "ru": "⚙️ Настройки", "en": "⚙️ Settings"}
-BTN_REMINDERS = {"uz": "🔔 Eslatmalar", "ru": "🔔 Напоминания", "en": "🔔 Reminders"}
+BTN_SETTINGS = {
+    "uz": "⚙️ Sozlamalar", "ru": "⚙️ Настройки", "en": "⚙️ Settings",
+    "kk": "⚙️ Параметрлер", "tg": "⚙️ Танзимот", "ky": "⚙️ Жөндөөлөр",
+}
+BTN_REMINDERS = {
+    "uz": "🔔 Eslatmalar", "ru": "🔔 Напоминания", "en": "🔔 Reminders",
+    "kk": "🔔 Еске салулар", "tg": "🔔 Ёддоштҳо", "ky": "🔔 Эскертмелер",
+}
 
 
 @router.message(F.text.in_(BTN_SETTINGS.values()))
@@ -130,7 +136,7 @@ async def set_reminder_days(call: CallbackQuery):
     await call.message.edit_text(text, reply_markup=reminder_keyboard(lang, user.reminder_enabled), parse_mode="HTML")
 
 
-@router.message(F.text.in_({"📊 Mening tarixim", "📊 Моя история", "📊 My history"}))
+@router.message(F.text.in_({"📊 Mening tarixim", "📊 Моя история", "📊 My history", "📊 Менің тарихым", "📊 Таърихи ман", "📊 Менин тарыхым"}))
 async def show_stats(message: Message):
     async with async_session() as session:
         user = await get_or_create_user(session, message.from_user.id)

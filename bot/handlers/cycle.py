@@ -14,8 +14,14 @@ from bot.keyboards.inline import main_menu, flow_keyboard
 
 router = Router()
 
-BTN_START = {"uz": "🌺 Sehrli kun boshlandi", "ru": "🌺 Волшебный день начался", "en": "🌺 Magical day started"}
-BTN_END = {"uz": "🌼 Sehrli kun tugadi", "ru": "🌼 Волшебный день завершился", "en": "🌼 Magical day ended"}
+BTN_START = {
+    "uz": "🌺 Sehrli kun boshlandi", "ru": "🌺 Волшебный день начался", "en": "🌺 Magical day started",
+    "kk": "🌺 Сиқырлы күн басталды", "tg": "🌺 Рӯзи ҷодугарӣ оғоз шуд", "ky": "🌺 Сыйкырлуу күн башталды",
+}
+BTN_END = {
+    "uz": "🌼 Sehrli kun tugadi", "ru": "🌼 Волшебный день завершился", "en": "🌼 Magical day ended",
+    "kk": "🌼 Сиқырлы күн аяқталды", "tg": "🌼 Рӯзи ҷодугарӣ ба охир расид", "ky": "🌼 Сыйкырлуу күн аяктады",
+}
 
 
 def _is_btn(text: str, mapping: dict) -> bool:

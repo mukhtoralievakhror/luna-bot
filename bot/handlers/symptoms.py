@@ -11,9 +11,8 @@ from bot.keyboards.inline import flow_keyboard, pain_keyboard, mood_keyboard, ma
 router = Router()
 
 BTN_SYMPTOMS = {
-    "uz": "💊 Bugungi holat",
-    "ru": "💊 Самочувствие сегодня",
-    "en": "💊 Today's wellbeing",
+    "uz": "💊 Bugungi holat", "ru": "💊 Самочувствие сегодня", "en": "💊 Today's wellbeing",
+    "kk": "💊 Бүгінгі жағдай", "tg": "💊 Ҳоли имрӯза", "ky": "💊 Бүгүнкү абал",
 }
 
 
