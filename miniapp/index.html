@@ -139,6 +139,12 @@
       <div class="saved-msg" id="saved-msg"></div>
     </div>
   </div>
+  <div class="card" style="margin-top:12px" id="partner-card">
+    <div class="settings-section">
+      <div class="settings-label" id="lbl-partner-section">👫 Partner</div>
+      <div id="partner-status-block"></div>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -156,6 +162,8 @@ const LABELS = {
   uz: {
     tab_overview: '✨ Umumiy', tab_calendar: '📅 Kalendar',
     tab_history: '📋 Tarix', tab_mood: '💕 Kayfiyat',
+    partner_lbl: '👫 Hamkor', partner_connected: '✅ Ulangan', partner_none: 'Hech kim ulanmagan',
+    partner_disconnect: '❌ Uzish',
     loading: 'Yuklanmoqda 🌸', open_in_tg: 'Telegram orqali oching 🌸',
     header_next: (n) => `${n} kundan keyin sehrli kunlar`,
     header_started: 'Sehrli kunlar boshlandi!', header_none: "Ma'lumot yo'q",
@@ -174,6 +182,8 @@ const LABELS = {
   ru: {
     tab_overview: '✨ Обзор', tab_calendar: '📅 Календарь',
     tab_history: '📋 История', tab_mood: '💕 Настроение',
+    partner_lbl: '👫 Партнёр', partner_connected: '✅ Подключён', partner_none: 'Никто не подключён',
+    partner_disconnect: '❌ Отключить',
     loading: 'Загрузка 🌸', open_in_tg: 'Открой через Telegram 🌸',
     header_next: (n) => `Волшебные дни через ${n} дн.`,
     header_started: 'Волшебные дни начались!', header_none: 'Нет данных',
@@ -192,6 +202,8 @@ const LABELS = {
   en: {
     tab_overview: '✨ Overview', tab_calendar: '📅 Calendar',
     tab_history: '📋 History', tab_mood: '💕 Mood',
+    partner_lbl: '👫 Partner', partner_connected: '✅ Connected', partner_none: 'No partner connected',
+    partner_disconnect: '❌ Disconnect',
     loading: 'Loading 🌸', open_in_tg: 'Open via Telegram 🌸',
     header_next: (n) => `Magical days in ${n} days`,
     header_started: 'Magical days started!', header_none: 'No data',
@@ -210,6 +222,8 @@ const LABELS = {
   kk: {
     tab_overview: '✨ Жалпы', tab_calendar: '📅 Күнтізбе',
     tab_history: '📋 Тарих', tab_mood: '💕 Көңіл-күй',
+    partner_lbl: '👫 Серіктес', partner_connected: '✅ Қосылған', partner_none: 'Серіктес жоқ',
+    partner_disconnect: '❌ Ажырату',
     loading: 'Жүктелуде 🌸', open_in_tg: 'Telegram арқылы аш 🌸',
     header_next: (n) => `Сиқырлы күндер ${n} күннен кейін`,
     header_started: 'Сиқырлы күндер басталды!', header_none: 'Деректер жоқ',
@@ -228,6 +242,8 @@ const LABELS = {
   tg: {
     tab_overview: '✨ Умумӣ', tab_calendar: '📅 Тақвим',
     tab_history: '📋 Таърих', tab_mood: '💕 Кайфият',
+    partner_lbl: '👫 Ҳамкор', partner_connected: '✅ Пайваст', partner_none: 'Ҳамкор нест',
+    partner_disconnect: '❌ Ҷудо кардан',
     loading: 'Боргузорӣ 🌸', open_in_tg: 'Тавассути Telegram кушо 🌸',
     header_next: (n) => `Рӯзҳои ҷодугарӣ баъди ${n} рӯз`,
     header_started: 'Рӯзҳои ҷодугарӣ оғоз шуд!', header_none: 'Маълумот нест',
@@ -246,6 +262,8 @@ const LABELS = {
   ky: {
     tab_overview: '✨ Жалпы', tab_calendar: '📅 Күнтөркүн',
     tab_history: '📋 Тарых', tab_mood: '💕 Маанай',
+    partner_lbl: '👫 Өнөктөш', partner_connected: '✅ Кошулган', partner_none: 'Өнөктөш жок',
+    partner_disconnect: '❌ Ажыратуу',
     loading: 'Жүктөлүүдө 🌸', open_in_tg: 'Telegram аркылуу ач 🌸',
     header_next: (n) => `Сыйкырлуу күндөр ${n} күндөн кийин`,
     header_started: 'Сыйкырлуу күндөр башталды!', header_none: 'Маалымат жок',
@@ -342,6 +360,38 @@ function renderAll() {
   renderCalendar();
   renderHistory();
   renderMood();
+  renderPartner();
+}
+
+function renderPartner() {
+  const L = LABELS[getLang()] || LABELS.uz;
+  const block = document.getElementById('partner-status-block');
+  const lbl = document.getElementById('lbl-partner-section');
+  if (!block) return;
+  if (lbl) lbl.textContent = L.partner_lbl || '👫 Partner';
+
+  const hasPartner = DATA?.user?.partner_id;
+  if (hasPartner) {
+    block.innerHTML = `
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:4px 0">
+        <span style="color:var(--text-dark);font-size:14px">${L.partner_connected}</span>
+        <button onclick="disconnectPartner()" style="background:none;border:1px solid #f43f5e;color:#f43f5e;border-radius:8px;padding:4px 10px;font-size:12px;cursor:pointer">${L.partner_disconnect}</button>
+      </div>`;
+  } else {
+    block.innerHTML = `<p style="color:var(--text-soft);font-size:13px;margin:0">${L.partner_none}</p>`;
+  }
+}
+
+async function disconnectPartner() {
+  if (!userId) return;
+  try {
+    await fetch(`${API_BASE}/api/user/${userId}/partner/disconnect`, { method: 'POST' });
+    DATA.user.partner_id = null;
+    DATA.user.partner_notify = false;
+    renderPartner();
+  } catch(e) {
+    alert('Xatolik: ' + e.message);
+  }
 }
 
 function renderOverview() {

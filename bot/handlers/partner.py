@@ -122,10 +122,9 @@ async def partner_reject(call: CallbackQuery):
     await call.answer()
 
 
-@router.message(F.text.regexp(r"(?i)^connect\s+([A-F0-9]{6})$"))
+@router.message(F.text.regexp(r"(?i)^[A-F0-9]{6}$"))
 async def connect_code(message: Message):
-    parts = message.text.strip().split()
-    code = parts[1].upper()
+    code = message.text.strip().upper()
 
     async with async_session() as session:
         # Ensure sender is registered

@@ -12,7 +12,8 @@ from bot.services.cycle_service import (
 )
 from bot.services.i18n import t
 from bot.keyboards.inline import (
-    main_menu, lang_change_select, settings_keyboard, reset_confirm_keyboard, reminder_keyboard
+    main_menu, lang_change_select, settings_keyboard, reset_confirm_keyboard,
+    reminder_keyboard, partner_main_menu
 )
 
 router = Router()
@@ -130,10 +131,14 @@ async def set_reminder_days(call: CallbackQuery):
         user.reminder_days_before = days
         await session.commit()
         lang = user.language
-        status = t(lang, "reminder_on") if user.reminder_enabled else t(lang, "reminder_off")
-        text = t(lang, "reminder_settings", status=status, days=days)
-    await call.answer(f"✅ {days} kun")
-    await call.message.edit_text(text, reply_markup=reminder_keyboard(lang, user.reminder_enabled), parse_mode="HTML")
+        role = user.role
+    await call.answer()
+    try:
+        await call.message.delete()
+    except Exception:
+        pass
+    kb = partner_main_menu(lang) if role == "partner" else main_menu(lang)
+    await call.message.answer(f"🔔 ✅ {days} kun", reply_markup=kb)
 
 
 @router.message(F.text.in_({"📊 Mening tarixim", "📊 Моя история", "📊 My history", "📊 Менің тарихым", "📊 Таърихи ман", "📊 Менин тарыхым"}))

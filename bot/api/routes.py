@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import select
 
 from bot.database.db import async_session
-from bot.database.models import Cycle, Symptom
+from bot.database.models import Cycle, Symptom, User
 from bot.services.cycle_service import (
     get_or_create_user, get_all_cycles, get_last_cycle,
     compute_next_period, compute_ovulation, compute_pms_start,
@@ -17,9 +17,20 @@ app = FastAPI(title="Luna Bot API")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
-    allow_methods=["GET"],
+    allow_methods=["GET", "POST"],
     allow_headers=["*"],
 )
+
+
+@app.post("/api/user/{user_id}/partner/disconnect")
+async def disconnect_partner(user_id: int):
+    async with async_session() as session:
+        user = await session.get(User, user_id)
+        if user:
+            user.partner_id = None
+            user.partner_notify = False
+            await session.commit()
+    return {"ok": True}
 
 
 @app.get("/api/user/{user_id}/data")
@@ -47,6 +58,8 @@ async def get_user_data(user_id: int):
             "language": user.language,
             "avg_cycle_length": user.avg_cycle_length,
             "avg_period_length": user.avg_period_length,
+            "partner_id": user.partner_id,
+            "partner_notify": user.partner_notify,
         },
         "predictions": {
             "next_period": next_period.isoformat() if next_period else None,
