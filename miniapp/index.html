@@ -171,6 +171,7 @@ const LABELS = {
     next_lbl: 'Keyingi ✨', glow_lbl: 'Nur kuni 💫',
     days: 'kun', today: 'Bugun!', ring_center: 'sikl',
     tracked: 'Jami kuzatilgan:', cycles_unit: 'ta sikl',
+    ring_hint: (p) => p >= 86 ? 'Sehrli kunlar vaqti 🌺' : p >= 61 ? 'Sehrli kunlarga yaqin 🌙' : p >= 26 ? 'Sikl o\'rtasi — nur kuni yaqin 💫' : 'Yangi sikl — dam olish davri 🌸',
     leg_period: 'Sehrli kunlar', leg_fertile: 'Nur davri', leg_glow: 'Nur kuni', leg_pms: 'Sezgir kunlar',
     day_names: ['Du','Se','Ch','Pe','Ju','Sh','Ya'],
     history_title: 'Sikl tarixi', no_cycles: "Hali sikl yo'q 🌸",
@@ -191,6 +192,7 @@ const LABELS = {
     next_lbl: 'Следующие ✨', glow_lbl: 'День сияния 💫',
     days: 'дн.', today: 'Сегодня!', ring_center: 'цикл',
     tracked: 'Всего отслежено:', cycles_unit: 'цикл(ов)',
+    ring_hint: (p) => p >= 86 ? 'Время волшебных дней 🌺' : p >= 61 ? 'Скоро волшебные дни 🌙' : p >= 26 ? 'Середина цикла — день сияния близко 💫' : 'Новый цикл — время отдыха 🌸',
     leg_period: 'Волшебные дни', leg_fertile: 'Фертильные дни', leg_glow: 'День сияния', leg_pms: 'Чувств. дни',
     day_names: ['Пн','Вт','Ср','Чт','Пт','Сб','Вс'],
     history_title: 'История циклов', no_cycles: 'Циклов пока нет 🌸',
@@ -211,6 +213,7 @@ const LABELS = {
     next_lbl: 'Next ✨', glow_lbl: 'Glow day 💫',
     days: 'days', today: 'Today!', ring_center: 'cycle',
     tracked: 'Total tracked:', cycles_unit: 'cycle(s)',
+    ring_hint: (p) => p >= 86 ? 'Magical days time 🌺' : p >= 61 ? 'Magical days coming soon 🌙' : p >= 26 ? 'Mid-cycle — glow day approaching 💫' : 'New cycle — rest time 🌸',
     leg_period: 'Magical days', leg_fertile: 'Fertile days', leg_glow: 'Glow day', leg_pms: 'Sensitive days',
     day_names: ['Mo','Tu','We','Th','Fr','Sa','Su'],
     history_title: 'Cycle history', no_cycles: 'No cycles yet 🌸',
@@ -231,6 +234,7 @@ const LABELS = {
     next_lbl: 'Келесі ✨', glow_lbl: 'Жарқын күн 💫',
     days: 'күн', today: 'Бүгін!', ring_center: 'цикл',
     tracked: 'Барлығы бақыланған:', cycles_unit: 'цикл',
+    ring_hint: (p) => p >= 86 ? 'Сиқырлы күндер уақыты 🌺' : p >= 61 ? 'Сиқырлы күндер жақын 🌙' : p >= 26 ? 'Циклдің ортасы — жарқын күн жақын 💫' : 'Жаңа цикл — демалу уақыты 🌸',
     leg_period: 'Сиқырлы күндер', leg_fertile: 'Фертилді күндер', leg_glow: 'Жарқын күн', leg_pms: 'Сезімтал күндер',
     day_names: ['Дс','Сс','Ср','Бс','Жм','Сн','Жк'],
     history_title: 'Цикл тарихы', no_cycles: 'Циклдер жоқ 🌸',
@@ -251,6 +255,7 @@ const LABELS = {
     next_lbl: 'Оянда ✨', glow_lbl: 'Рӯзи дурахшон 💫',
     days: 'рӯз', today: 'Имрӯз!', ring_center: 'давра',
     tracked: 'Ҳамагӣ назорат:', cycles_unit: 'давра',
+    ring_hint: (p) => p >= 86 ? 'Вақти рӯзҳои ҷодугарӣ 🌺' : p >= 61 ? 'Рӯзҳои ҷодугарӣ наздик 🌙' : p >= 26 ? 'Миёнаи давра — рӯзи дурахшон наздик 💫' : 'Давраи нав — вақти истироҳат 🌸',
     leg_period: 'Рӯзҳои ҷодугарӣ', leg_fertile: 'Рӯзҳои фертилӣ', leg_glow: 'Рӯзи дурахшон', leg_pms: 'Рӯзҳои ҳассос',
     day_names: ['Дш','Сш','Чш','Пш','Ҷм','Шн','Яш'],
     history_title: 'Таърихи давра', no_cycles: 'Давра нест 🌸',
@@ -271,6 +276,7 @@ const LABELS = {
     next_lbl: 'Кийинки ✨', glow_lbl: 'Жарык күн 💫',
     days: 'күн', today: 'Бүгүн!', ring_center: 'цикл',
     tracked: 'Жалпы байкалган:', cycles_unit: 'цикл',
+    ring_hint: (p) => p >= 86 ? 'Сыйкырлуу күндөр мезгили 🌺' : p >= 61 ? 'Сыйкырлуу күндөр жакын 🌙' : p >= 26 ? 'Циклдин ортосу — жарык күн жакын 💫' : 'Жаңы цикл — эс алуу мезгили 🌸',
     leg_period: 'Сыйкырлуу күндөр', leg_fertile: 'Фертилдик күндөр', leg_glow: 'Жарык күн', leg_pms: 'Сезгич күндөр',
     day_names: ['Дш','Шш','Ср','Бш','Жм','Иш','Жк'],
     history_title: 'Цикл тарыхы', no_cycles: 'Цикл жок 🌸',
@@ -411,6 +417,7 @@ function renderOverview() {
     <div class="ring-wrap">
       <canvas id="ringChart" class="ring" width="180" height="180"></canvas>
     </div>
+    <p style="text-align:center;font-size:13px;color:var(--text-mid);margin:-4px 0 14px">${L.ring_hint(ringPct)}</p>
     <div class="stat-grid">
       <div class="stat-card">
         <div class="stat-label">${L.avg_cycle}</div>
