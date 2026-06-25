@@ -33,6 +33,8 @@ async def handle_start(message: Message, state: FSMContext):
     async with async_session() as session:
         user = await get_or_create_user(session, message.from_user.id)
         lang = user.language
+        if user.role == "partner":
+            return
         cycle = await start_cycle(session, message.from_user.id)
     if cycle is None:
         await message.answer(t(lang, "cycle_already_active"))
@@ -46,6 +48,8 @@ async def handle_end(message: Message):
     async with async_session() as session:
         user = await get_or_create_user(session, message.from_user.id)
         lang = user.language
+        if user.role == "partner":
+            return
         cycle = await end_cycle(session, message.from_user.id)
     if cycle is None:
         await message.answer(t(lang, "cycle_not_active"))

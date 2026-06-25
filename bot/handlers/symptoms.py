@@ -26,6 +26,8 @@ async def ask_flow(message: Message, state: FSMContext):
     async with async_session() as session:
         user = await get_or_create_user(session, message.from_user.id)
         lang = user.language
+        if user.role == "partner":
+            return
     await message.answer(t(lang, "flow_question"), reply_markup=flow_keyboard(lang))
     await state.update_data(lang=lang, user_id=message.from_user.id)
 

@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from bot.database.db import async_session
 from bot.services.cycle_service import get_or_create_user
 from bot.services.i18n import t
-from bot.keyboards.inline import lang_select, main_menu
+from bot.keyboards.inline import lang_select, main_menu, role_select_keyboard, partner_main_menu
 
 router = Router()
 
@@ -34,9 +34,33 @@ async def set_language(call: CallbackQuery, state: FSMContext):
         user.language = lang
         await session.commit()
     await call.message.edit_text(t(lang, "lang_set"))
-    await call.message.answer(t(lang, "ask_cycle_len"), parse_mode="HTML")
-    await state.set_state(SetupStates.waiting_cycle_len)
+    await call.message.answer(t(lang, "choose_role"), reply_markup=role_select_keyboard(lang))
     await state.update_data(lang=lang)
+
+
+@router.callback_query(F.data == "setup_role:woman")
+async def set_role_woman(call: CallbackQuery, state: FSMContext):
+    data = await state.get_data()
+    lang = data.get("lang", "uz")
+    async with async_session() as session:
+        user = await get_or_create_user(session, call.from_user.id)
+        user.role = "woman"
+        await session.commit()
+    await call.message.edit_text(t(lang, "ask_cycle_len"), parse_mode="HTML")
+    await state.set_state(SetupStates.waiting_cycle_len)
+
+
+@router.callback_query(F.data == "setup_role:partner")
+async def set_role_partner(call: CallbackQuery, state: FSMContext):
+    data = await state.get_data()
+    lang = data.get("lang", "uz")
+    async with async_session() as session:
+        user = await get_or_create_user(session, call.from_user.id)
+        user.role = "partner"
+        await session.commit()
+    await call.message.edit_text(t(lang, "partner_welcome"), parse_mode="HTML")
+    await call.message.answer("💙", reply_markup=partner_main_menu(lang))
+    await state.clear()
 
 
 @router.message(SetupStates.waiting_cycle_len)

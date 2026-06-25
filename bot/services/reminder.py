@@ -32,6 +32,22 @@ async def send_reminders(bot: Bot):
                 await bot.send_message(user.id, t(lang, "reminder_ovulation"))
             elif today == pms_start:
                 await bot.send_message(user.id, t(lang, "reminder_pms"))
+
+            if user.partner_id and user.partner_notify:
+                try:
+                    async with async_session() as psession:
+                        from bot.database.models import User as UserModel
+                        partner = await psession.get(UserModel, user.partner_id)
+                    if partner:
+                        p_lang = partner.language
+                        if days_until == user.reminder_days_before:
+                            await bot.send_message(user.partner_id, t(p_lang, "partner_notify_period", days=days_until))
+                        elif today == ovulation:
+                            await bot.send_message(user.partner_id, t(p_lang, "partner_notify_ovulation"))
+                        elif today == pms_start:
+                            await bot.send_message(user.partner_id, t(p_lang, "partner_notify_pms"))
+                except Exception:
+                    pass
         except Exception:
             pass
 

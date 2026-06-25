@@ -10,7 +10,7 @@ from aiogram.fsm.storage.memory import MemoryStorage
 
 from bot.config import BOT_TOKEN
 from bot.database.db import init_db
-from bot.handlers import start, cycle, symptoms, settings
+from bot.handlers import start, cycle, symptoms, settings, partner
 from bot.services.reminder import setup_scheduler
 from bot.api.routes import app as fastapi_app
 
@@ -34,6 +34,7 @@ async def main():
     dp.include_router(cycle.router)
     dp.include_router(symptoms.router)
     dp.include_router(settings.router)
+    dp.include_router(partner.router)
 
     scheduler = setup_scheduler(bot)
     scheduler.start()

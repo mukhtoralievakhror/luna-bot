@@ -14,6 +14,22 @@ def main_menu(lang: str) -> ReplyKeyboardMarkup:
     )
 
 
+def role_select_keyboard(lang: str) -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup(inline_keyboard=[[
+        InlineKeyboardButton(text=t(lang, "btn_role_woman"), callback_data="setup_role:woman"),
+        InlineKeyboardButton(text=t(lang, "btn_role_man"), callback_data="setup_role:partner"),
+    ]])
+
+
+def partner_main_menu(lang: str) -> ReplyKeyboardMarkup:
+    return ReplyKeyboardMarkup(
+        keyboard=[
+            [KeyboardButton(text=t(lang, "btn_reminders")), KeyboardButton(text=t(lang, "btn_settings"))],
+        ],
+        resize_keyboard=True,
+    )
+
+
 def lang_select() -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(inline_keyboard=[
         [
@@ -90,8 +106,25 @@ def reminder_keyboard(lang: str, enabled: bool) -> InlineKeyboardMarkup:
 def settings_keyboard(lang: str) -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton(text=t(lang, "settings_change_lang"), callback_data="settings:lang")],
+        [InlineKeyboardButton(text=t(lang, "settings_partner"), callback_data="settings:partner")],
         [InlineKeyboardButton(text=t(lang, "settings_reset"), callback_data="settings:reset")],
     ])
+
+
+def partner_keyboard(lang: str, has_partner: bool) -> InlineKeyboardMarkup:
+    rows = []
+    if not has_partner:
+        rows.append([InlineKeyboardButton(text=t(lang, "partner_btn_generate"), callback_data="settings:partner:generate")])
+    else:
+        rows.append([InlineKeyboardButton(text=t(lang, "partner_btn_disconnect"), callback_data="settings:partner:disconnect")])
+    return InlineKeyboardMarkup(inline_keyboard=rows)
+
+
+def partner_confirm_keyboard(lang: str, code: str) -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup(inline_keyboard=[[
+        InlineKeyboardButton(text=t(lang, "partner_confirm_yes"), callback_data=f"partner:confirm:{code}"),
+        InlineKeyboardButton(text=t(lang, "partner_confirm_no"), callback_data=f"partner:reject:{code}"),
+    ]])
 
 
 def reset_confirm_keyboard(lang: str) -> InlineKeyboardMarkup:
