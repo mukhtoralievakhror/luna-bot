@@ -30,6 +30,12 @@ async def init_db():
         await conn.execute(text(
             "ALTER TABLE users ADD COLUMN IF NOT EXISTS username VARCHAR(100);"
         ))
+        await conn.execute(text(
+            "ALTER TABLE users ADD COLUMN IF NOT EXISTS pain_reminder_hour INTEGER DEFAULT 20;"
+        ))
+        await conn.execute(text(
+            "ALTER TABLE symptoms ADD COLUMN IF NOT EXISTS pain_types TEXT;"
+        ))
 
 
 async def get_session() -> AsyncSession:

@@ -90,6 +90,7 @@ async def upsert_symptom(
     user_id: int,
     flow: Optional[str] = None,
     pain_level: Optional[int] = None,
+    pain_types: Optional[str] = None,
     mood: Optional[str] = None,
     notes: Optional[str] = None,
 ) -> Symptom:
@@ -105,6 +106,8 @@ async def upsert_symptom(
         symptom.flow = flow
     if pain_level is not None:
         symptom.pain_level = pain_level
+    if pain_types is not None:
+        symptom.pain_types = pain_types
     if mood is not None:
         symptom.mood = mood
     if notes is not None:

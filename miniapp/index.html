@@ -87,6 +87,11 @@
     }
     .lang-btn.active { border-color: var(--accent); background: var(--accent-light); color: var(--accent); font-weight: 600; }
     .saved-msg { text-align: center; font-size: 13px; color: var(--accent); margin-top: 12px; height: 20px; }
+    .pain-chip { display: inline-block; background: var(--accent-light); color: var(--accent); font-size: 11px; border-radius: 20px; padding: 2px 9px; margin: 2px 3px 2px 0; font-weight: 500; }
+    .sym-row { display: flex; flex-direction: column; gap: 4px; padding: 8px 0; border-bottom: 0.5px solid var(--border); }
+    .sym-row:last-child { border-bottom: none; }
+    .sym-date { font-size: 11px; color: var(--text-soft); font-weight: 500; }
+    .sym-chips { display: flex; flex-wrap: wrap; gap: 2px; margin-top: 2px; }
   </style>
 </head>
 <body>
@@ -178,6 +183,8 @@ const LABELS = {
     cycle_num: (n) => `${n}-sikl`,
     no_symptoms: "Hali simptom yo'q 🌸",
     pain_title: "Og'riq darajasi (so'nggi 30 kun)", mood_title: 'Kayfiyat dinamikasi',
+    recent_pain: "So'nggi og'riq yozuvlari",
+    pain_type_labels: { cramp: '🌀 Qorin', headache: '🤕 Bosh', back: '💙 Bel', chest: '🌸 Ko\'krak' },
     saved: 'Saqlandi ✓',
   },
   ru: {
@@ -199,6 +206,8 @@ const LABELS = {
     cycle_num: (n) => `${n}-й цикл`,
     no_symptoms: 'Симптомов пока нет 🌸',
     pain_title: 'Уровень боли (последние 30 дней)', mood_title: 'Динамика настроения',
+    recent_pain: 'Последние записи о боли',
+    pain_type_labels: { cramp: '🌀 Живот', headache: '🤕 Голова', back: '💙 Поясница', chest: '🌸 Грудь' },
     saved: 'Сохранено ✓',
   },
   en: {
@@ -220,6 +229,8 @@ const LABELS = {
     cycle_num: (n) => `Cycle ${n}`,
     no_symptoms: 'No symptoms yet 🌸',
     pain_title: 'Pain level (last 30 days)', mood_title: 'Mood dynamics',
+    recent_pain: 'Recent pain records',
+    pain_type_labels: { cramp: '🌀 Cramps', headache: '🤕 Headache', back: '💙 Back', chest: '🌸 Chest' },
     saved: 'Saved ✓',
   },
   kk: {
@@ -241,6 +252,8 @@ const LABELS = {
     cycle_num: (n) => `${n}-цикл`,
     no_symptoms: 'Симптомдар жоқ 🌸',
     pain_title: 'Ауырсыну деңгейі (соңғы 30 күн)', mood_title: 'Көңіл-күй динамикасы',
+    recent_pain: 'Соңғы ауырсыну жазбалары',
+    pain_type_labels: { cramp: '🌀 Іш', headache: '🤕 Бас', back: '💙 Бел', chest: '🌸 Кеуде' },
     saved: 'Сақталды ✓',
   },
   tg: {
@@ -262,6 +275,8 @@ const LABELS = {
     cycle_num: (n) => `Давраи ${n}`,
     no_symptoms: 'Ҳанӯз аломат нест 🌸',
     pain_title: 'Дараҷаи дард (30 рӯзи охир)', mood_title: 'Динамикаи кайфият',
+    recent_pain: 'Сабтҳои охирини дард',
+    pain_type_labels: { cramp: '🌀 Шикам', headache: '🤕 Сар', back: '💙 Камар', chest: '🌸 Сина' },
     saved: 'Сабт шуд ✓',
   },
   ky: {
@@ -283,6 +298,8 @@ const LABELS = {
     cycle_num: (n) => `${n}-цикл`,
     no_symptoms: 'Симптом жок 🌸',
     pain_title: 'Оору деңгээли (акыркы 30 күн)', mood_title: 'Маанай динамикасы',
+    recent_pain: 'Акыркы оору жазуулары',
+    pain_type_labels: { cramp: '🌀 Курсак', headache: '🤕 Баш', back: '💙 Бел', chest: '🌸 Көкүрөк' },
     saved: 'Сакталды ✓',
   },
 };
@@ -542,6 +559,18 @@ function renderHistory() {
   document.getElementById('history-content').innerHTML = html;
 }
 
+function painChipsHtml(pain_types_json, L) {
+  if (!pain_types_json) return '';
+  try {
+    const types = JSON.parse(pain_types_json);
+    if (!types.length) return '';
+    return types.map(pt => {
+      const label = (L.pain_type_labels || {})[pt] || pt;
+      return `<span class="pain-chip">${label}</span>`;
+    }).join('');
+  } catch { return ''; }
+}
+
 function renderMood() {
   const L = LABELS[getLang()] || LABELS.uz;
   const { symptoms } = DATA;
@@ -556,7 +585,20 @@ function renderMood() {
   const moodMap = { happy: 5, normal: 3, tired: 2, sad: 1, irritable: 1 };
   const moodVals = last30.map(s => moodMap[s.mood] || 0);
 
+  const withPainTypes = symptoms.filter(s => s.pain_types && s.pain_types !== '[]').slice(0, 7);
+  const recentPainHtml = withPainTypes.length ? `
+    <div class="card" style="margin-bottom:12px">
+      <div class="chart-title" style="margin-bottom:8px">${L.recent_pain || 'Recent pain records'}</div>
+      ${withPainTypes.map(s => `
+        <div class="sym-row">
+          <div class="sym-date">${fmt(s.date)}</div>
+          <div class="sym-chips">${painChipsHtml(s.pain_types, L)}</div>
+        </div>
+      `).join('')}
+    </div>` : '';
+
   document.getElementById('mood-content').innerHTML = `
+    ${recentPainHtml}
     <div class="chart-wrap">
       <div class="chart-title">${L.pain_title}</div>
       <canvas id="painChart" height="120"></canvas>

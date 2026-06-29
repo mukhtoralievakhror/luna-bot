@@ -60,6 +60,49 @@ def lang_change_select() -> InlineKeyboardMarkup:
     ])
 
 
+def holat_menu_keyboard(lang: str) -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup(inline_keyboard=[[
+        InlineKeyboardButton(text=t(lang, "btn_oqim"), callback_data="holat:oqim"),
+        InlineKeyboardButton(text=t(lang, "btn_daily_pain"), callback_data="holat:pain"),
+    ]])
+
+
+_PAIN_TYPES = ["cramp", "headache", "back", "chest"]
+_PAIN_TYPE_KEYS = {
+    "cramp": "pain_type_cramp",
+    "headache": "pain_type_headache",
+    "back": "pain_type_back",
+    "chest": "pain_type_chest",
+}
+
+
+def pain_types_keyboard(lang: str, selected: list) -> InlineKeyboardMarkup:
+    rows = []
+    for pt in _PAIN_TYPES:
+        mark = "✅ " if pt in selected else "⬜ "
+        rows.append([InlineKeyboardButton(
+            text=mark + t(lang, _PAIN_TYPE_KEYS[pt]),
+            callback_data=f"ptype:{pt}",
+        )])
+    rows.append([
+        InlineKeyboardButton(text=t(lang, "pain_type_none"), callback_data="ptype_none"),
+        InlineKeyboardButton(text=t(lang, "pain_types_done"), callback_data="ptype_done"),
+    ])
+    return InlineKeyboardMarkup(inline_keyboard=rows)
+
+
+def pain_hour_keyboard(lang: str, current_hour: int) -> InlineKeyboardMarkup:
+    hours = [18, 19, 20, 21, 22]
+    buttons = [
+        InlineKeyboardButton(
+            text=f"{'✅ ' if h == current_hour else ''}{h}:00",
+            callback_data=f"pain_hour:{h}",
+        )
+        for h in hours
+    ]
+    return InlineKeyboardMarkup(inline_keyboard=[buttons])
+
+
 def flow_keyboard(lang: str) -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(inline_keyboard=[[
         InlineKeyboardButton(text=t(lang, "flow_light"), callback_data="flow:light"),
@@ -107,6 +150,7 @@ def settings_keyboard(lang: str) -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton(text=t(lang, "settings_change_lang"), callback_data="settings:lang")],
         [InlineKeyboardButton(text=t(lang, "settings_partner"), callback_data="settings:partner")],
+        [InlineKeyboardButton(text=t(lang, "settings_pain_time"), callback_data="settings:pain_time")],
         [InlineKeyboardButton(text=t(lang, "settings_reset"), callback_data="settings:reset")],
     ])
 

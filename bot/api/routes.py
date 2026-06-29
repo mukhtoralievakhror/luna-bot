@@ -90,6 +90,7 @@ async def get_user_data(user_id: int):
                 "date": s.date.isoformat(),
                 "flow": s.flow,
                 "pain_level": s.pain_level,
+                "pain_types": s.pain_types,
                 "mood": s.mood,
             }
             for s in symptoms

@@ -19,6 +19,7 @@ class User(Base):
     avg_period_length: Mapped[int] = mapped_column(Integer, default=5)
     reminder_enabled: Mapped[bool] = mapped_column(Boolean, default=True)
     reminder_days_before: Mapped[int] = mapped_column(Integer, default=2)
+    pain_reminder_hour: Mapped[int] = mapped_column(Integer, default=20)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
     first_name: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
@@ -53,6 +54,7 @@ class Symptom(Base):
     date: Mapped[date] = mapped_column(Date)
     flow: Mapped[Optional[str]] = mapped_column(String(10), nullable=True)
     pain_level: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    pain_types: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     mood: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)
     notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
 

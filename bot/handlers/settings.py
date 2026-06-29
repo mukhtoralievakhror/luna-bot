@@ -13,7 +13,7 @@ from bot.services.cycle_service import (
 from bot.services.i18n import t
 from bot.keyboards.inline import (
     main_menu, lang_change_select, settings_keyboard, reset_confirm_keyboard,
-    reminder_keyboard, partner_main_menu
+    reminder_keyboard, partner_main_menu, pain_hour_keyboard
 )
 
 router = Router()
@@ -107,6 +107,31 @@ async def cancel_reset(call: CallbackQuery):
                  cycle=user.avg_cycle_length,
                  period=user.avg_period_length)
     await call.message.edit_text(text, reply_markup=settings_keyboard(lang), parse_mode="HTML")
+    await call.answer()
+
+
+@router.callback_query(F.data == "settings:pain_time")
+async def show_pain_time(call: CallbackQuery):
+    async with async_session() as session:
+        user = await get_or_create_user(session, call.from_user.id)
+        lang = user.language
+        hour = user.pain_reminder_hour
+    await call.message.edit_text(
+        t(lang, "settings_pain_time") + f"\n\n⏰ {hour}:00",
+        reply_markup=pain_hour_keyboard(lang, hour),
+    )
+    await call.answer()
+
+
+@router.callback_query(F.data.startswith("pain_hour:"))
+async def set_pain_hour(call: CallbackQuery):
+    hour = int(call.data.split(":")[1])
+    async with async_session() as session:
+        user = await get_or_create_user(session, call.from_user.id)
+        user.pain_reminder_hour = hour
+        lang = user.language
+        await session.commit()
+    await call.message.edit_text(t(lang, "pain_time_set", hour=hour))
     await call.answer()
 
 
