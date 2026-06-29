@@ -8,3 +8,4 @@ DATABASE_URL = os.getenv("DATABASE_URL", "postgresql+asyncpg://luna:luna@localho
 MINIAPP_URL = os.getenv("MINIAPP_URL", "https://your-miniapp.railway.app")
 TIMEZONE = os.getenv("TIMEZONE", "Asia/Tashkent")
 API_SECRET = os.getenv("API_SECRET", "change-me-in-production")
+ADMIN_SECRET = os.getenv("ADMIN_SECRET", "change-me-admin")

@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Luna Admin Panel</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f5f5f7;color:#1a1a1a;min-height:100vh}
+.topbar{background:#1a1a1a;color:#fff;padding:14px 24px;display:flex;align-items:center;justify-content:space-between}
+.topbar h1{font-size:18px;font-weight:600}
+.topbar span{font-size:12px;color:#a0a0a0}
+.tabs{display:flex;background:#fff;border-bottom:1px solid rgba(0,0,0,.08);padding:0 24px}
+.tab-btn{padding:12px 16px;border:none;background:none;font-size:13px;color:#6b6b6b;cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap}
+.tab-btn.active{color:#f43f5e;border-bottom-color:#f43f5e;font-weight:600}
+.page{display:none;padding:24px;max-width:1100px;margin:0 auto}
+.page.active{display:block}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:16px}
+.card{background:#fff;border:0.5px solid rgba(0,0,0,.08);border-radius:14px;box-shadow:0 1px 3px rgba(0,0,0,.04);padding:18px}
+.stat-val{font-size:28px;font-weight:700;color:#1a1a1a;margin:6px 0 2px}
+.stat-lbl{font-size:11px;color:#a0a0a0;text-transform:uppercase;letter-spacing:.4px}
+.stat-sub{font-size:12px;color:#6b6b6b}
+.card-title{font-size:13px;font-weight:600;color:#1a1a1a;margin-bottom:14px}
+.accent{color:#f43f5e}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;padding:10px 12px;font-size:11px;color:#a0a0a0;text-transform:uppercase;letter-spacing:.3px;border-bottom:1px solid rgba(0,0,0,.06)}
+td{padding:10px 12px;border-bottom:1px solid rgba(0,0,0,.04)}
+tr:hover td{background:#f9f9f9}
+.badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:500}
+.badge-pink{background:#ffe4e9;color:#f43f5e}
+.badge-blue{background:#e0f0ff;color:#0077cc}
+.badge-gray{background:#f0f0f0;color:#666}
+.btn{display:inline-block;padding:8px 16px;border-radius:8px;border:none;cursor:pointer;font-size:13px;font-weight:500;transition:.15s}
+.btn-primary{background:#f43f5e;color:#fff}
+.btn-primary:hover{background:#e03354}
+.btn-secondary{background:#f0f0f0;color:#333}
+.btn-secondary:hover{background:#e4e4e4}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+input,select,textarea{border:1px solid rgba(0,0,0,.12);border-radius:8px;padding:9px 12px;font-size:13px;width:100%;outline:none;font-family:inherit}
+input:focus,select:focus,textarea:focus{border-color:#f43f5e}
+textarea{resize:vertical;min-height:110px}
+.form-row{margin-bottom:14px}
+.form-label{font-size:12px;color:#6b6b6b;margin-bottom:6px;display:block;font-weight:500}
+.msg{padding:12px 16px;border-radius:8px;font-size:13px;margin-top:12px}
+.msg-ok{background:#d1fae5;color:#065f46}
+.msg-err{background:#fee2e2;color:#991b1b}
+.msg-info{background:#e0f0ff;color:#0055aa}
+.filters{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;align-items:center}
+.filters input,.filters select{width:auto;min-width:120px}
+.pager{display:flex;gap:8px;align-items:center;margin-top:16px;justify-content:center}
+.pager span{font-size:13px;color:#6b6b6b}
+#login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;background:#f5f5f7}
+.login-box{background:#fff;border-radius:16px;padding:32px;width:340px;box-shadow:0 4px 24px rgba(0,0,0,.1)}
+.login-box h2{font-size:20px;font-weight:700;margin-bottom:6px}
+.login-box p{color:#6b6b6b;font-size:13px;margin-bottom:20px}
+.health-row{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid rgba(0,0,0,.06)}
+.health-row:last-child{border:none}
+.dot{width:10px;height:10px;border-radius:50%;display:inline-block;margin-right:6px}
+.dot-green{background:#10b981}
+.dot-red{background:#f43f5e}
+.loading{color:#a0a0a0;font-size:13px;text-align:center;padding:24px}
+@media(max-width:700px){.grid4{grid-template-columns:1fr 1fr}.grid2{grid-template-columns:1fr}.topbar h1{font-size:15px}}
+</style>
+</head>
+<body>
+
+<!-- Login screen -->
+<div id="login-screen">
+  <div class="login-box">
+    <h2>🌸 Luna Admin</h2>
+    <p>Kirish uchun admin parolini kiriting</p>
+    <div class="form-row">
+      <input type="password" id="secret-input" placeholder="Admin secret..." onkeydown="if(event.key==='Enter')doLogin()"/>
+    </div>
+    <button class="btn btn-primary" style="width:100%" onclick="doLogin()">Kirish</button>
+    <div id="login-err" class="msg msg-err" style="display:none"></div>
+  </div>
+</div>
+
+<!-- Main app -->
+<div id="app" style="display:none">
+  <div class="topbar">
+    <h1>🌸 Luna Admin Panel</h1>
+    <span id="topbar-info">yuklanmoqda...</span>
+  </div>
+  <div class="tabs">
+    <button class="tab-btn active" onclick="showTab('dashboard')">📊 Dashboard</button>
+    <button class="tab-btn" onclick="showTab('users')">👥 Foydalanuvchilar</button>
+    <button class="tab-btn" onclick="showTab('broadcast')">📢 Broadcast</button>
+    <button class="tab-btn" onclick="showTab('health')">🩺 Monitoring</button>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div id="tab-dashboard" class="page active">
+    <div class="grid4" id="stat-cards">
+      <div class="card"><div class="stat-lbl">Jami foydalanuvchilar</div><div class="stat-val" id="s-total">—</div><div class="stat-sub" id="s-today"></div></div>
+      <div class="card"><div class="stat-lbl">Ayollar</div><div class="stat-val" id="s-women">—</div><div class="stat-sub" id="s-week"></div></div>
+      <div class="card"><div class="stat-lbl">Hamkorlar</div><div class="stat-val" id="s-partners">—</div><div class="stat-sub" id="s-connections"></div></div>
+      <div class="card"><div class="stat-lbl">Jami sikllar</div><div class="stat-val" id="s-cycles">—</div><div class="stat-sub" id="s-symptoms"></div></div>
+    </div>
+    <div class="grid2">
+      <div class="card">
+        <div class="card-title">Tillar bo'yicha</div>
+        <canvas id="langChart" height="200"></canvas>
+      </div>
+      <div class="card">
+        <div class="card-title">So'nggi 30 kun — yangi foydalanuvchilar</div>
+        <canvas id="growthChart" height="200"></canvas>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Tez ma'lumot</div>
+      <div class="grid4" style="margin:0">
+        <div><div class="stat-lbl">Eslatmalar yoqilgan</div><div class="stat-val accent" id="s-reminders">—</div></div>
+        <div><div class="stat-lbl">Bugun qo'shildi</div><div class="stat-val" id="s-new-today">—</div></div>
+        <div><div class="stat-lbl">Bu hafta</div><div class="stat-val" id="s-new-week">—</div></div>
+        <div><div class="stat-lbl">Bu oy</div><div class="stat-val" id="s-new-month">—</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- USERS -->
+  <div id="tab-users" class="page">
+    <div class="filters">
+      <input type="text" id="user-search" placeholder="User ID qidirish..." style="width:160px" onkeydown="if(event.key==='Enter')loadUsers(1)"/>
+      <select id="user-lang" onchange="loadUsers(1)">
+        <option value="">Barcha tillar</option>
+        <option value="uz">🇺🇿 O'zbek</option>
+        <option value="ru">🇷🇺 Русский</option>
+        <option value="en">🇬🇧 English</option>
+        <option value="kk">🇰🇿 Қазақша</option>
+        <option value="tg">🇹🇯 Тоҷикӣ</option>
+        <option value="ky">🇰🇬 Кыргызча</option>
+      </select>
+      <select id="user-role" onchange="loadUsers(1)">
+        <option value="">Barcha rollar</option>
+        <option value="woman">👩 Ayol</option>
+        <option value="partner">👨 Hamkor</option>
+      </select>
+      <button class="btn btn-secondary" onclick="loadUsers(1)">Qidirish</button>
+      <span id="user-count" style="font-size:12px;color:#6b6b6b"></span>
+    </div>
+    <div class="card" style="padding:0;overflow:hidden">
+      <table>
+        <thead><tr>
+          <th>ID</th><th>Til</th><th>Rol</th><th>Ro'yxat sanasi</th><th>Eslatma</th><th>Partner</th><th>Sikllar</th><th></th>
+        </tr></thead>
+        <tbody id="users-tbody"><tr><td colspan="8" class="loading">Yuklanmoqda...</td></tr></tbody>
+      </table>
+    </div>
+    <div class="pager">
+      <button class="btn btn-secondary" id="prev-btn" onclick="changePage(-1)" disabled>← Oldingi</button>
+      <span id="page-info">1-sahifa</span>
+      <button class="btn btn-secondary" id="next-btn" onclick="changePage(1)">Keyingi →</button>
+    </div>
+    <!-- User detail modal -->
+    <div id="user-detail" class="card" style="display:none;margin-top:16px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+        <div class="card-title" style="margin:0" id="ud-title">Foydalanuvchi</div>
+        <button class="btn btn-secondary" onclick="document.getElementById('user-detail').style.display='none'">✕ Yopish</button>
+      </div>
+      <div id="ud-content"></div>
+    </div>
+  </div>
+
+  <!-- BROADCAST -->
+  <div id="tab-broadcast" class="page">
+    <div class="grid2">
+      <div class="card">
+        <div class="card-title">Xabar yuborish</div>
+        <div class="form-row">
+          <label class="form-label">Nishon guruh</label>
+          <select id="bc-target" onchange="updateCount()">
+            <option value="all">🌍 Hammasi</option>
+            <option value="women">👩 Faqat ayollar</option>
+            <option value="partners">👨 Faqat hamkorlar</option>
+            <option value="uz">🇺🇿 O'zbek tili</option>
+            <option value="ru">🇷🇺 Русский</option>
+            <option value="en">🇬🇧 English</option>
+            <option value="kk">🇰🇿 Қазақша</option>
+            <option value="tg">🇹🇯 Тоҷикӣ</option>
+            <option value="ky">🇰🇬 Кыргызча</option>
+          </select>
+        </div>
+        <div id="bc-count-info" class="msg msg-info" style="margin-bottom:12px">Yuklash...</div>
+        <div class="form-row">
+          <label class="form-label">Xabar matni (HTML qo'llab-quvvatlanadi)</label>
+          <textarea id="bc-text" placeholder="Xabar matni...&#10;&#10;<b>Qalin</b>, <i>kursiv</i>, <a href='...'>link</a>"></textarea>
+        </div>
+        <div style="display:flex;gap:10px;align-items:center">
+          <button class="btn btn-primary" id="bc-send-btn" onclick="sendBroadcast()">📢 Yuborish</button>
+          <span id="bc-status" style="font-size:12px;color:#6b6b6b"></span>
+        </div>
+        <div id="bc-result" style="display:none" class="msg"></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Ko'rinish (preview)</div>
+        <div id="bc-preview" style="background:#f5f5f7;border-radius:10px;padding:14px;min-height:80px;font-size:14px;line-height:1.5;color:#1a1a1a;white-space:pre-wrap;word-break:break-word">
+          Xabar matni bu yerda ko'rinadi...
+        </div>
+        <p style="font-size:11px;color:#a0a0a0;margin-top:10px">Telegram da HTML teglari ishlaydi: &lt;b&gt;, &lt;i&gt;, &lt;code&gt;, &lt;a href&gt;</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- HEALTH -->
+  <div id="tab-health" class="page">
+    <div class="grid2">
+      <div class="card">
+        <div class="card-title">Tizim holati</div>
+        <div id="health-content" class="loading">Yuklanmoqda...</div>
+      </div>
+      <div class="card">
+        <div class="card-title">Ma'lumotlar bazasi statistikasi</div>
+        <div id="db-stats-content" class="loading">Yuklanmoqda...</div>
+      </div>
+    </div>
+    <div class="card" style="margin-top:0">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div class="card-title" style="margin:0">Oxirgi yangilanish</div>
+        <button class="btn btn-secondary" onclick="loadHealth()">🔄 Yangilash</button>
+      </div>
+      <p id="health-time" style="font-size:13px;color:#6b6b6b;margin-top:8px">—</p>
+    </div>
+  </div>
+</div>
+
+<script>
+let SECRET = localStorage.getItem('luna_admin_secret') || '';
+let currentPage = 1;
+let totalUsers = 0;
+let langChartInst = null;
+let growthChartInst = null;
+
+function doLogin() {
+  const val = document.getElementById('secret-input').value.trim();
+  if (!val) return;
+  SECRET = val;
+  fetch(`/admin/api/health?secret=${encodeURIComponent(SECRET)}`)
+    .then(r => {
+      if (r.status === 403) throw new Error('Parol noto\'g\'ri');
+      return r.json();
+    })
+    .then(() => {
+      localStorage.setItem('luna_admin_secret', SECRET);
+      document.getElementById('login-screen').style.display = 'none';
+      document.getElementById('app').style.display = 'block';
+      initApp();
+    })
+    .catch(e => {
+      const el = document.getElementById('login-err');
+      el.textContent = e.message;
+      el.style.display = 'block';
+    });
+}
+
+function api(path) {
+  const sep = path.includes('?') ? '&' : '?';
+  return fetch(`/admin/api${path}${sep}secret=${encodeURIComponent(SECRET)}`).then(r => {
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    return r.json();
+  });
+}
+
+function showTab(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  event.currentTarget.classList.add('active');
+  if (name === 'users') loadUsers(1);
+  if (name === 'health') loadHealth();
+  if (name === 'broadcast') updateCount();
+}
+
+function initApp() {
+  loadDashboard();
+  // live preview for broadcast
+  document.getElementById('bc-text').addEventListener('input', () => {
+    document.getElementById('bc-preview').innerHTML = document.getElementById('bc-text').value || 'Xabar matni bu yerda ko\'rinadi...';
+  });
+}
+
+// ── DASHBOARD ──
+function loadDashboard() {
+  api('/stats').then(d => {
+    document.getElementById('s-total').textContent = d.total_users;
+    document.getElementById('s-today').textContent = `Bugun +${d.new_today}`;
+    document.getElementById('s-women').textContent = d.women;
+    document.getElementById('s-week').textContent = `Hafta +${d.new_week}`;
+    document.getElementById('s-partners').textContent = d.partners;
+    document.getElementById('s-connections').textContent = `${d.partner_connections} ulangan`;
+    document.getElementById('s-cycles').textContent = d.total_cycles;
+    document.getElementById('s-symptoms').textContent = `${d.total_symptoms} simptom`;
+    document.getElementById('s-reminders').textContent = d.reminders_on;
+    document.getElementById('s-new-today').textContent = d.new_today;
+    document.getElementById('s-new-week').textContent = d.new_week;
+    document.getElementById('s-new-month').textContent = d.new_month;
+    document.getElementById('topbar-info').textContent = `Jami: ${d.total_users} user`;
+
+    // Lang donut
+    const langLabels = d.by_lang.map(l => l.lang.toUpperCase());
+    const langData = d.by_lang.map(l => l.count);
+    const colors = ['#f43f5e','#fb923c','#facc15','#4ade80','#60a5fa','#a78bfa'];
+    if (langChartInst) langChartInst.destroy();
+    langChartInst = new Chart(document.getElementById('langChart'), {
+      type: 'doughnut',
+      data: { labels: langLabels, datasets: [{ data: langData, backgroundColor: colors, borderWidth: 0 }] },
+      options: { cutout: '60%', plugins: { legend: { position: 'bottom', labels: { font: { size: 11 } } } } }
+    });
+
+    // Growth line
+    const gDates = d.growth.map(g => g.date.slice(5));
+    const gCounts = d.growth.map(g => g.count);
+    if (growthChartInst) growthChartInst.destroy();
+    growthChartInst = new Chart(document.getElementById('growthChart'), {
+      type: 'line',
+      data: { labels: gDates, datasets: [{ data: gCounts, borderColor: '#f43f5e', backgroundColor: 'rgba(244,63,94,.08)', fill: true, tension: 0.3, pointRadius: 2 }] },
+      options: { plugins: { legend: { display: false } }, scales: { x: { ticks: { font: { size: 10 }, maxRotation: 0 } }, y: { ticks: { font: { size: 10 } }, beginAtZero: true } } }
+    });
+  }).catch(e => console.error('Stats error:', e));
+}
+
+// ── USERS ──
+function loadUsers(page) {
+  currentPage = page || currentPage;
+  const search = document.getElementById('user-search').value.trim();
+  const lang = document.getElementById('user-lang').value;
+  const role = document.getElementById('user-role').value;
+  let url = `/users?page=${currentPage}`;
+  if (lang) url += `&lang=${lang}`;
+  if (role) url += `&role=${role}`;
+  if (search) url += `&search=${encodeURIComponent(search)}`;
+
+  document.getElementById('users-tbody').innerHTML = '<tr><td colspan="8" class="loading">Yuklanmoqda...</td></tr>';
+  api(url).then(d => {
+    totalUsers = d.total;
+    document.getElementById('user-count').textContent = `Jami: ${d.total} ta`;
+    document.getElementById('page-info').textContent = `${currentPage}-sahifa`;
+    document.getElementById('prev-btn').disabled = currentPage <= 1;
+    document.getElementById('next-btn').disabled = d.users.length < 50;
+
+    const tbody = document.getElementById('users-tbody');
+    if (!d.users.length) {
+      tbody.innerHTML = '<tr><td colspan="8" class="loading">Foydalanuvchilar topilmadi</td></tr>';
+      return;
+    }
+    tbody.innerHTML = d.users.map(u => `
+      <tr>
+        <td><code style="font-size:12px">${u.id}</code></td>
+        <td><span class="badge badge-gray">${u.language}</span></td>
+        <td>${u.role === 'woman' ? '<span class="badge badge-pink">👩 Ayol</span>' : '<span class="badge badge-blue">👨 Hamkor</span>'}</td>
+        <td style="color:#6b6b6b;font-size:12px">${u.created_at ? u.created_at.slice(0,10) : '—'}</td>
+        <td>${u.reminder_enabled ? '✅' : '❌'}</td>
+        <td>${u.partner_id ? '💙 Ulangan' : '—'}</td>
+        <td>${u.cycle_count}</td>
+        <td><button class="btn btn-secondary" style="padding:4px 10px;font-size:12px" onclick="loadUserDetail(${u.id})">Ko'rish</button></td>
+      </tr>
+    `).join('');
+  }).catch(e => {
+    document.getElementById('users-tbody').innerHTML = `<tr><td colspan="8" class="loading" style="color:#f43f5e">Xatolik: ${e.message}</td></tr>`;
+  });
+}
+
+function changePage(delta) {
+  loadUsers(currentPage + delta);
+}
+
+function loadUserDetail(uid) {
+  const det = document.getElementById('user-detail');
+  det.style.display = 'block';
+  document.getElementById('ud-content').innerHTML = '<div class="loading">Yuklanmoqda...</div>';
+  document.getElementById('ud-title').textContent = `Foydalanuvchi #${uid}`;
+  det.scrollIntoView({ behavior: 'smooth' });
+
+  api(`/users/${uid}`).then(u => {
+    document.getElementById('ud-content').innerHTML = `
+      <div class="grid4" style="margin-bottom:16px">
+        <div><div class="stat-lbl">ID</div><code>${u.id}</code></div>
+        <div><div class="stat-lbl">Til</div>${u.language}</div>
+        <div><div class="stat-lbl">Rol</div>${u.role}</div>
+        <div><div class="stat-lbl">Ro'yxat sanasi</div>${u.created_at ? u.created_at.slice(0,10) : '—'}</div>
+        <div><div class="stat-lbl">Sikl uzunligi</div>${u.avg_cycle_length} kun</div>
+        <div><div class="stat-lbl">Hayz davomiyligi</div>${u.avg_period_length} kun</div>
+        <div><div class="stat-lbl">Eslatma</div>${u.reminder_enabled ? '✅ Yoqilgan' : '❌ O\'chirilgan'}</div>
+        <div><div class="stat-lbl">Partner ID</div>${u.partner_id || '—'}</div>
+      </div>
+      <div class="card-title" style="margin-bottom:10px">So'nggi sikllar (${u.cycles.length})</div>
+      ${u.cycles.length ? `<table>
+        <thead><tr><th>Boshlanish</th><th>Tugash</th><th>Uzunlik</th></tr></thead>
+        <tbody>${u.cycles.map(c => `<tr>
+          <td>${c.start_date}</td>
+          <td>${c.end_date || '<span style="color:#f43f5e">Faol</span>'}</td>
+          <td>${c.cycle_length ? c.cycle_length + ' kun' : '—'}</td>
+        </tr>`).join('')}</tbody>
+      </table>` : '<p style="color:#a0a0a0;font-size:13px">Sikllar yo\'q</p>'}
+      <p style="margin-top:12px;font-size:13px;color:#6b6b6b">Jami simptomlar: <b>${u.symptom_count}</b></p>
+    `;
+  }).catch(e => {
+    document.getElementById('ud-content').innerHTML = `<p style="color:#f43f5e">Xatolik: ${e.message}</p>`;
+  });
+}
+
+// ── BROADCAST ──
+function updateCount() {
+  const target = document.getElementById('bc-target').value;
+  const el = document.getElementById('bc-count-info');
+  el.textContent = 'Hisoblanmoqda...';
+  el.className = 'msg msg-info';
+  api(`/broadcast/count?target=${target}`).then(d => {
+    el.textContent = `📨 Xabar ${d.count} ta foydalanuvchiga yuboriladi`;
+  }).catch(() => { el.textContent = 'Hisoblab bo\'lmadi'; });
+}
+
+function sendBroadcast() {
+  const text = document.getElementById('bc-text').value.trim();
+  const target = document.getElementById('bc-target').value;
+  if (!text) return alert('Xabar matnini kiriting!');
+
+  const btn = document.getElementById('bc-send-btn');
+  const status = document.getElementById('bc-status');
+  const result = document.getElementById('bc-result');
+  btn.disabled = true;
+  btn.textContent = '⏳ Yuborilmoqda...';
+  status.textContent = '';
+  result.style.display = 'none';
+
+  const sep = `/broadcast?secret=${encodeURIComponent(SECRET)}`;
+  fetch(`/admin/api${sep}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ text, target }),
+  }).then(r => r.json()).then(d => {
+    result.className = 'msg msg-ok';
+    result.textContent = `✅ Yuborildi: ${d.sent} ta. Muvaffaqiyatsiz: ${d.failed} ta. Jami: ${d.total} ta.`;
+    result.style.display = 'block';
+    btn.textContent = '📢 Yuborish';
+    btn.disabled = false;
+  }).catch(e => {
+    result.className = 'msg msg-err';
+    result.textContent = `❌ Xatolik: ${e.message}`;
+    result.style.display = 'block';
+    btn.textContent = '📢 Yuborish';
+    btn.disabled = false;
+  });
+}
+
+// ── HEALTH ──
+function loadHealth() {
+  api('/health').then(d => {
+    document.getElementById('health-content').innerHTML = `
+      <div class="health-row">
+        <span>Ma'lumotlar bazasi</span>
+        <span><span class="dot ${d.db === 'ok' ? 'dot-green' : 'dot-red'}"></span>${d.db === 'ok' ? 'Ishlayapti ✅' : 'Xatolik ❌'}</span>
+      </div>
+      <div class="health-row">
+        <span>Bot holati</span>
+        <span><span class="dot dot-green"></span>Faol ✅</span>
+      </div>
+      <div class="health-row">
+        <span>Server vaqti (UTC)</span>
+        <span style="font-size:12px;color:#6b6b6b">${d.server_time.replace('T',' ').slice(0,19)}</span>
+      </div>
+    `;
+    document.getElementById('db-stats-content').innerHTML = `
+      <div class="health-row"><span>Jami foydalanuvchilar</span><b>${d.users}</b></div>
+      <div class="health-row"><span>Jami sikllar</span><b>${d.cycles}</b></div>
+      <div class="health-row"><span>Jami simptomlar</span><b>${d.symptoms}</b></div>
+    `;
+    document.getElementById('health-time').textContent = 'Yangilangan: ' + new Date().toLocaleTimeString();
+  }).catch(e => {
+    document.getElementById('health-content').innerHTML = `<p style="color:#f43f5e">Xatolik: ${e.message}</p>`;
+  });
+}
+
+// Auto-login if secret in localStorage
+if (SECRET) {
+  fetch(`/admin/api/health?secret=${encodeURIComponent(SECRET)}`)
+    .then(r => { if (!r.ok) throw new Error(); return r.json(); })
+    .then(() => {
+      document.getElementById('login-screen').style.display = 'none';
+      document.getElementById('app').style.display = 'block';
+      initApp();
+    })
+    .catch(() => { SECRET = ''; localStorage.removeItem('luna_admin_secret'); });
+}
+</script>
+</body>
+</html>

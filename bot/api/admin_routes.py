@@ -1,0 +1,239 @@
+from __future__ import annotations
+
+import os
+from datetime import datetime, date, timedelta
+from typing import Optional
+
+from fastapi import APIRouter, HTTPException, Query
+from pydantic import BaseModel
+from sqlalchemy import select, func, text
+
+from bot.database.db import async_session
+from bot.database.models import User, Cycle, Symptom
+from bot.config import BOT_TOKEN, ADMIN_SECRET
+
+router = APIRouter(prefix="/admin/api")
+
+
+def _check(secret: str):
+    if secret != ADMIN_SECRET:
+        raise HTTPException(status_code=403, detail="Forbidden")
+
+
+@router.get("/stats")
+async def get_stats(secret: str = Query(...)):
+    _check(secret)
+    async with async_session() as session:
+        total_users = (await session.execute(select(func.count()).select_from(User))).scalar()
+        women = (await session.execute(select(func.count()).select_from(User).where(User.role == "woman"))).scalar()
+        partners = (await session.execute(select(func.count()).select_from(User).where(User.role == "partner"))).scalar()
+        partner_connections = (await session.execute(
+            select(func.count()).select_from(User).where(User.partner_id.isnot(None))
+        )).scalar()
+        reminders_on = (await session.execute(
+            select(func.count()).select_from(User).where(User.reminder_enabled == True)
+        )).scalar()
+        total_cycles = (await session.execute(select(func.count()).select_from(Cycle))).scalar()
+        total_symptoms = (await session.execute(select(func.count()).select_from(Symptom))).scalar()
+
+        today = date.today()
+        week_ago = today - timedelta(days=7)
+        month_ago = today - timedelta(days=30)
+
+        new_today = (await session.execute(
+            select(func.count()).select_from(User).where(func.date(User.created_at) == today)
+        )).scalar()
+        new_week = (await session.execute(
+            select(func.count()).select_from(User).where(func.date(User.created_at) >= week_ago)
+        )).scalar()
+        new_month = (await session.execute(
+            select(func.count()).select_from(User).where(func.date(User.created_at) >= month_ago)
+        )).scalar()
+
+        lang_rows = (await session.execute(
+            select(User.language, func.count().label("cnt")).group_by(User.language).order_by(func.count().desc())
+        )).all()
+
+        # Daily new users last 30 days for chart
+        growth_rows = (await session.execute(
+            select(func.date(User.created_at).label("d"), func.count().label("cnt"))
+            .where(func.date(User.created_at) >= month_ago)
+            .group_by(func.date(User.created_at))
+            .order_by(func.date(User.created_at))
+        )).all()
+
+    return {
+        "total_users": total_users,
+        "women": women,
+        "partners": partners,
+        "partner_connections": partner_connections,
+        "reminders_on": reminders_on,
+        "total_cycles": total_cycles,
+        "total_symptoms": total_symptoms,
+        "new_today": new_today,
+        "new_week": new_week,
+        "new_month": new_month,
+        "by_lang": [{"lang": r.language, "count": r.cnt} for r in lang_rows],
+        "growth": [{"date": str(r.d), "count": r.cnt} for r in growth_rows],
+    }
+
+
+@router.get("/users")
+async def list_users(
+    secret: str = Query(...),
+    page: int = Query(1, ge=1),
+    lang: Optional[str] = None,
+    role: Optional[str] = None,
+    search: Optional[str] = None,
+):
+    _check(secret)
+    limit = 50
+    offset = (page - 1) * limit
+
+    async with async_session() as session:
+        q = select(User).order_by(User.created_at.desc())
+        if lang:
+            q = q.where(User.language == lang)
+        if role:
+            q = q.where(User.role == role)
+        if search:
+            try:
+                uid = int(search)
+                q = q.where(User.id == uid)
+            except ValueError:
+                pass
+
+        count_q = select(func.count()).select_from(q.subquery())
+        total = (await session.execute(count_q)).scalar()
+        users = (await session.execute(q.offset(offset).limit(limit))).scalars().all()
+
+        result = []
+        for u in users:
+            cycle_count = (await session.execute(
+                select(func.count()).select_from(Cycle).where(Cycle.user_id == u.id)
+            )).scalar()
+            result.append({
+                "id": u.id,
+                "language": u.language,
+                "role": u.role,
+                "created_at": u.created_at.isoformat() if u.created_at else None,
+                "reminder_enabled": u.reminder_enabled,
+                "partner_id": u.partner_id,
+                "cycle_count": cycle_count,
+            })
+
+    return {"total": total, "page": page, "users": result}
+
+
+@router.get("/users/{user_id}")
+async def get_user_detail(user_id: int, secret: str = Query(...)):
+    _check(secret)
+    async with async_session() as session:
+        user = await session.get(User, user_id)
+        if not user:
+            raise HTTPException(404, "User not found")
+
+        cycles = (await session.execute(
+            select(Cycle).where(Cycle.user_id == user_id).order_by(Cycle.start_date.desc()).limit(10)
+        )).scalars().all()
+
+        symptom_count = (await session.execute(
+            select(func.count()).select_from(Symptom).where(Symptom.user_id == user_id)
+        )).scalar()
+
+    return {
+        "id": user.id,
+        "language": user.language,
+        "role": user.role,
+        "avg_cycle_length": user.avg_cycle_length,
+        "avg_period_length": user.avg_period_length,
+        "reminder_enabled": user.reminder_enabled,
+        "reminder_days_before": user.reminder_days_before,
+        "partner_id": user.partner_id,
+        "partner_notify": user.partner_notify,
+        "created_at": user.created_at.isoformat() if user.created_at else None,
+        "cycles": [
+            {
+                "id": c.id,
+                "start_date": c.start_date.isoformat(),
+                "end_date": c.end_date.isoformat() if c.end_date else None,
+                "cycle_length": c.cycle_length,
+            }
+            for c in cycles
+        ],
+        "symptom_count": symptom_count,
+    }
+
+
+class BroadcastBody(BaseModel):
+    text: str
+    target: str = "all"  # all | women | partners | uz | ru | en | kk | tg | ky
+
+
+@router.post("/broadcast")
+async def broadcast(secret: str = Query(...), body: BroadcastBody = ...):
+    _check(secret)
+    if not body.text.strip():
+        raise HTTPException(400, "Text is empty")
+
+    async with async_session() as session:
+        q = select(User.id)
+        if body.target == "women":
+            q = q.where(User.role == "woman")
+        elif body.target == "partners":
+            q = q.where(User.role == "partner")
+        elif body.target in ("uz", "ru", "en", "kk", "tg", "ky"):
+            q = q.where(User.language == body.target)
+        user_ids = (await session.execute(q)).scalars().all()
+
+    from aiogram import Bot
+    bot = Bot(token=BOT_TOKEN)
+    sent = failed = 0
+    for uid in user_ids:
+        try:
+            await bot.send_message(uid, body.text, parse_mode="HTML")
+            sent += 1
+        except Exception:
+            failed += 1
+    await bot.session.close()
+
+    return {"sent": sent, "failed": failed, "total": len(user_ids)}
+
+
+@router.get("/broadcast/count")
+async def broadcast_count(secret: str = Query(...), target: str = Query("all")):
+    _check(secret)
+    async with async_session() as session:
+        q = select(func.count()).select_from(User)
+        if target == "women":
+            q = q.where(User.role == "woman")
+        elif target == "partners":
+            q = q.where(User.role == "partner")
+        elif target in ("uz", "ru", "en", "kk", "tg", "ky"):
+            q = q.where(User.language == target)
+        count = (await session.execute(q)).scalar()
+    return {"count": count}
+
+
+@router.get("/health")
+async def health(secret: str = Query(...)):
+    _check(secret)
+    try:
+        async with async_session() as session:
+            await session.execute(text("SELECT 1"))
+        db_ok = True
+    except Exception:
+        db_ok = False
+
+    async with async_session() as session:
+        user_count = (await session.execute(select(func.count()).select_from(User))).scalar()
+        cycle_count = (await session.execute(select(func.count()).select_from(Cycle))).scalar()
+        symptom_count = (await session.execute(select(func.count()).select_from(Symptom))).scalar()
+
+    return {
+        "db": "ok" if db_ok else "error",
+        "server_time": datetime.utcnow().isoformat() + "Z",
+        "users": user_count,
+        "cycles": cycle_count,
+        "symptoms": symptom_count,
+    }

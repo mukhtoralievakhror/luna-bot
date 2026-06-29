@@ -1,8 +1,10 @@
 from __future__ import annotations
+import os
 from typing import Optional
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 from sqlalchemy import select
 
 from bot.database.db import async_session
@@ -11,8 +13,16 @@ from bot.services.cycle_service import (
     get_or_create_user, get_all_cycles, get_last_cycle,
     compute_next_period, compute_ovulation, compute_pms_start,
 )
+from bot.api.admin_routes import router as admin_router
 
 app = FastAPI(title="Luna Bot API")
+app.include_router(admin_router)
+
+_PANEL = os.path.join(os.path.dirname(__file__), "admin_panel.html")
+
+@app.get("/admin/")
+async def serve_admin():
+    return FileResponse(_PANEL)
 
 app.add_middleware(
     CORSMiddleware,
