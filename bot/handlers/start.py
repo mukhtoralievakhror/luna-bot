@@ -26,6 +26,9 @@ async def cmd_start(message: Message, state: FSMContext):
     async with async_session() as session:
         existing = await session.get(User, message.from_user.id)
         if existing:
+            existing.first_name = message.from_user.first_name
+            existing.username = message.from_user.username
+            await session.commit()
             lang = existing.language
             name = message.from_user.first_name or "gulim"
             await state.clear()
@@ -40,6 +43,9 @@ async def cmd_start(message: Message, state: FSMContext):
                 )
             return
         user = await get_or_create_user(session, message.from_user.id)
+        user.first_name = message.from_user.first_name
+        user.username = message.from_user.username
+        await session.commit()
         lang = user.language
     await message.answer(t(lang, "welcome"), reply_markup=lang_select(), parse_mode="HTML")
 

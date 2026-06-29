@@ -21,6 +21,9 @@ class User(Base):
     reminder_days_before: Mapped[int] = mapped_column(Integer, default=2)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
+    first_name: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    username: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+
     role: Mapped[str] = mapped_column(String(10), default="woman")
     partner_id: Mapped[Optional[int]] = mapped_column(BigInteger, nullable=True)
     partner_notify: Mapped[bool] = mapped_column(Boolean, default=False)

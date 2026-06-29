@@ -114,6 +114,8 @@ async def list_users(
             )).scalar()
             result.append({
                 "id": u.id,
+                "first_name": u.first_name,
+                "username": u.username,
                 "language": u.language,
                 "role": u.role,
                 "created_at": u.created_at.isoformat() if u.created_at else None,

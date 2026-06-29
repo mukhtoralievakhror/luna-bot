@@ -24,6 +24,12 @@ async def init_db():
         await conn.execute(text(
             "ALTER TABLE users ADD COLUMN IF NOT EXISTS partner_notify BOOLEAN DEFAULT FALSE;"
         ))
+        await conn.execute(text(
+            "ALTER TABLE users ADD COLUMN IF NOT EXISTS first_name VARCHAR(100);"
+        ))
+        await conn.execute(text(
+            "ALTER TABLE users ADD COLUMN IF NOT EXISTS username VARCHAR(100);"
+        ))
 
 
 async def get_session() -> AsyncSession:

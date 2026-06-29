@@ -145,9 +145,9 @@ textarea{resize:vertical;min-height:110px}
     <div class="card" style="padding:0;overflow:hidden">
       <table>
         <thead><tr>
-          <th>ID</th><th>Til</th><th>Rol</th><th>Ro'yxat sanasi</th><th>Eslatma</th><th>Partner</th><th>Sikllar</th><th></th>
+          <th>Foydalanuvchi</th><th>ID</th><th>Til</th><th>Rol</th><th>Sana</th><th>Eslatma</th><th>Partner</th><th>Sikl</th><th></th>
         </tr></thead>
-        <tbody id="users-tbody"><tr><td colspan="8" class="loading">Yuklanmoqda...</td></tr></tbody>
+        <tbody id="users-tbody"><tr><td colspan="9" class="loading">Yuklanmoqda...</td></tr></tbody>
       </table>
     </div>
     <div class="pager">
@@ -346,18 +346,26 @@ function loadUsers(page) {
       tbody.innerHTML = '<tr><td colspan="8" class="loading">Foydalanuvchilar topilmadi</td></tr>';
       return;
     }
-    tbody.innerHTML = d.users.map(u => `
-      <tr>
-        <td><code style="font-size:12px">${u.id}</code></td>
+    tbody.innerHTML = d.users.map(u => {
+      const name = u.first_name || '—';
+      const userLink = u.username
+        ? `<a href="https://t.me/${u.username}" target="_blank" style="color:#f43f5e;text-decoration:none;font-size:12px">@${u.username}</a>`
+        : `<span style="color:#a0a0a0;font-size:11px">username yo'q</span>`;
+      return `<tr>
+        <td>
+          <div style="font-size:13px;font-weight:500">${name}</div>
+          <div style="margin-top:2px">${userLink}</div>
+        </td>
+        <td><code style="font-size:11px;color:#6b6b6b">${u.id}</code></td>
         <td><span class="badge badge-gray">${u.language}</span></td>
         <td>${u.role === 'woman' ? '<span class="badge badge-pink">👩 Ayol</span>' : '<span class="badge badge-blue">👨 Hamkor</span>'}</td>
         <td style="color:#6b6b6b;font-size:12px">${u.created_at ? u.created_at.slice(0,10) : '—'}</td>
         <td>${u.reminder_enabled ? '✅' : '❌'}</td>
-        <td>${u.partner_id ? '💙 Ulangan' : '—'}</td>
+        <td>${u.partner_id ? '💙' : '—'}</td>
         <td>${u.cycle_count}</td>
         <td><button class="btn btn-secondary" style="padding:4px 10px;font-size:12px" onclick="loadUserDetail(${u.id})">Ko'rish</button></td>
-      </tr>
-    `).join('');
+      </tr>`;
+    }).join('');
   }).catch(e => {
     document.getElementById('users-tbody').innerHTML = `<tr><td colspan="8" class="loading" style="color:#f43f5e">Xatolik: ${e.message}</td></tr>`;
   });
