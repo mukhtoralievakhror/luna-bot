@@ -1,7 +1,7 @@
-from datetime import date
+from datetime import date, timedelta
 from aiogram import Router, F
 from aiogram.fsm.context import FSMContext
-from aiogram.types import Message
+from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from bot.database.db import async_session
@@ -55,6 +55,52 @@ async def handle_end(message: Message):
         await message.answer(t(lang, "cycle_not_active"))
         return
     await message.answer(t(lang, "cycle_ended"), reply_markup=main_menu(lang), parse_mode="HTML")
+
+
+@router.callback_query(F.data == "cycle_check:yes")
+async def cycle_check_yes(call: CallbackQuery):
+    async with async_session() as session:
+        user = await get_or_create_user(session, call.from_user.id)
+        lang = user.language
+    await call.message.edit_text(t(lang, "cycle_check_yes_response"))
+    await call.answer()
+
+
+@router.callback_query(F.data == "cycle_check:no")
+async def cycle_check_no(call: CallbackQuery):
+    async with async_session() as session:
+        user = await get_or_create_user(session, call.from_user.id)
+        lang = user.language
+    kb = InlineKeyboardMarkup(inline_keyboard=[
+        [
+            InlineKeyboardButton(text=t(lang, "cycle_end_today"), callback_data="cycle_end:0"),
+            InlineKeyboardButton(text=t(lang, "cycle_end_1ago"), callback_data="cycle_end:1"),
+        ],
+        [
+            InlineKeyboardButton(text=t(lang, "cycle_end_2ago"), callback_data="cycle_end:2"),
+            InlineKeyboardButton(text=t(lang, "cycle_end_3ago"), callback_data="cycle_end:3"),
+        ],
+    ])
+    await call.message.edit_text(t(lang, "cycle_check_when_ended"), reply_markup=kb)
+    await call.answer()
+
+
+@router.callback_query(F.data.startswith("cycle_end:"))
+async def cycle_end_manual(call: CallbackQuery):
+    days_ago = int(call.data.split(":")[1])
+    end_date = date.today() - timedelta(days=days_ago)
+    async with async_session() as session:
+        user = await get_or_create_user(session, call.from_user.id)
+        lang = user.language
+        cycle = await end_cycle(session, call.from_user.id, custom_end_date=end_date)
+    if cycle is None:
+        await call.answer()
+        return
+    await call.message.edit_text(
+        t(lang, "cycle_ended_manual", date=end_date.strftime("%d.%m.%Y")),
+        parse_mode="HTML",
+    )
+    await call.answer()
 
 
 async def build_status(user, session) -> str:

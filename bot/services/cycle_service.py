@@ -45,11 +45,11 @@ async def start_cycle(session: AsyncSession, user_id: int) -> Optional[Cycle]:
     return cycle
 
 
-async def end_cycle(session: AsyncSession, user_id: int) -> Optional[Cycle]:
+async def end_cycle(session: AsyncSession, user_id: int, custom_end_date: Optional[date] = None) -> Optional[Cycle]:
     active = await get_active_cycle(session, user_id)
     if not active:
         return None
-    active.end_date = date.today()
+    active.end_date = custom_end_date or date.today()
     duration = (active.end_date - active.start_date).days
     user = await session.get(User, user_id)
 

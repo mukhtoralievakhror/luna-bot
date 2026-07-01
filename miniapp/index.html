@@ -494,9 +494,8 @@ function renderCalendar() {
   const periodDates = new Set();
   const { cycles, predictions } = DATA;
   cycles.forEach(c => {
-    if (!c.end_date) return;
     let d = new Date(c.start_date);
-    const end = new Date(c.end_date);
+    const end = c.end_date ? new Date(c.end_date) : today;
     while (d <= end) {
       if (d.getFullYear() === year && d.getMonth() === month) periodDates.add(d.getDate());
       d.setDate(d.getDate() + 1);
