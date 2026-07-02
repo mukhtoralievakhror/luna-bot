@@ -73,19 +73,13 @@ async def got_flow(call: CallbackQuery, state: FSMContext):
     lang = data.get("lang", "uz")
     async with async_session() as session:
         await upsert_symptom(session, call.from_user.id, flow=flow)
-    await call.message.edit_text(t(lang, "pain_question"), reply_markup=pain_keyboard(lang))
-    await state.set_state(SymptomStates.waiting_pain)
-
-
-@router.callback_query(SymptomStates.waiting_pain, F.data.startswith("pain:"))
-async def got_pain(call: CallbackQuery, state: FSMContext):
-    pain = int(call.data.split(":")[1])
-    data = await state.get_data()
-    lang = data.get("lang", "uz")
-    async with async_session() as session:
-        await upsert_symptom(session, call.from_user.id, pain_level=pain)
-    await call.message.edit_text(t(lang, "mood_question"), reply_markup=mood_keyboard(lang))
-    await state.set_state(SymptomStates.waiting_mood)
+    await state.update_data(selected_pain_types=[], ask_mood=True)
+    await call.message.edit_text(
+        t(lang, "pain_types_question"),
+        reply_markup=pain_types_keyboard(lang, []),
+    )
+    await state.set_state(SymptomStates.waiting_pain_types)
+    await call.answer()
 
 
 @router.callback_query(SymptomStates.waiting_mood, F.data.startswith("mood:"))
@@ -121,11 +115,16 @@ async def toggle_pain_type(call: CallbackQuery, state: FSMContext):
 async def pain_type_none(call: CallbackQuery, state: FSMContext):
     data = await state.get_data()
     lang = data.get("lang", "uz")
+    ask_mood = data.get("ask_mood", False)
     async with async_session() as session:
         await upsert_symptom(session, call.from_user.id, pain_level=0, pain_types="[]")
-    await call.message.edit_text(t(lang, "pain_types_saved"))
-    await call.message.answer("🌸", reply_markup=main_menu(lang))
-    await state.clear()
+    if ask_mood:
+        await call.message.edit_text(t(lang, "mood_question"), reply_markup=mood_keyboard(lang))
+        await state.set_state(SymptomStates.waiting_mood)
+    else:
+        await call.message.edit_text(t(lang, "pain_types_saved"))
+        await call.message.answer("🌸", reply_markup=main_menu(lang))
+        await state.clear()
     await call.answer()
 
 
@@ -148,12 +147,17 @@ async def got_pain_after_types(call: CallbackQuery, state: FSMContext):
     pain = int(call.data.split(":")[1])
     data = await state.get_data()
     lang = data.get("lang", "uz")
+    ask_mood = data.get("ask_mood", False)
     pain_types_json = data.get("pain_types_json", "[]")
     async with async_session() as session:
         await upsert_symptom(session, call.from_user.id, pain_level=pain, pain_types=pain_types_json)
-    await call.message.edit_text(t(lang, "pain_types_saved"))
-    await call.message.answer("🌸", reply_markup=main_menu(lang))
-    await state.clear()
+    if ask_mood:
+        await call.message.edit_text(t(lang, "mood_question"), reply_markup=mood_keyboard(lang))
+        await state.set_state(SymptomStates.waiting_mood)
+    else:
+        await call.message.edit_text(t(lang, "pain_types_saved"))
+        await call.message.answer("🌸", reply_markup=main_menu(lang))
+        await state.clear()
     await call.answer()
 
 

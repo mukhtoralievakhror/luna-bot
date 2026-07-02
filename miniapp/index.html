@@ -161,6 +161,20 @@ const userId = tg.initDataUnsafe?.user?.id;
 const API_BASE = 'https://luna-bot-production-6d42.up.railway.app';
 
 let DATA = null;
+let calYear = new Date().getFullYear();
+let calMonth = new Date().getMonth();
+
+function prevCalMonth() {
+  calMonth--; if (calMonth < 0) { calMonth = 11; calYear--; }
+  renderCalendar();
+}
+function nextCalMonth() {
+  const now = new Date();
+  const maxY = now.getFullYear(), maxM = now.getMonth() + 2;
+  if (calYear > maxY || (calYear === maxY && calMonth >= maxM - 1)) return;
+  calMonth++; if (calMonth > 11) { calMonth = 0; calYear++; }
+  renderCalendar();
+}
 
 // ── i18n ──────────────────────────────────────────────
 const LABELS = {
@@ -179,6 +193,7 @@ const LABELS = {
     ring_hint: (p) => p >= 86 ? 'Sehrli kunlar vaqti 🌺' : p >= 61 ? 'Sehrli kunlarga yaqin 🌙' : p >= 26 ? 'Sikl o\'rtasi — nur kuni yaqin 💫' : 'Yangi sikl — dam olish davri 🌸',
     leg_period: 'Sehrli kunlar', leg_fertile: 'Nur davri', leg_glow: 'Nur kuni', leg_pms: 'Sezgir kunlar',
     day_names: ['Du','Se','Ch','Pe','Ju','Sh','Ya'],
+    month_names: ['Yanvar','Fevral','Mart','Aprel','May','Iyun','Iyul','Avgust','Sentabr','Oktabr','Noyabr','Dekabr'],
     history_title: 'Sikl tarixi', no_cycles: "Hali sikl yo'q 🌸",
     cycle_num: (n) => `${n}-sikl`,
     no_symptoms: "Hali simptom yo'q 🌸",
@@ -202,6 +217,7 @@ const LABELS = {
     ring_hint: (p) => p >= 86 ? 'Время волшебных дней 🌺' : p >= 61 ? 'Скоро волшебные дни 🌙' : p >= 26 ? 'Середина цикла — день сияния близко 💫' : 'Новый цикл — время отдыха 🌸',
     leg_period: 'Волшебные дни', leg_fertile: 'Фертильные дни', leg_glow: 'День сияния', leg_pms: 'Чувств. дни',
     day_names: ['Пн','Вт','Ср','Чт','Пт','Сб','Вс'],
+    month_names: ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'],
     history_title: 'История циклов', no_cycles: 'Циклов пока нет 🌸',
     cycle_num: (n) => `${n}-й цикл`,
     no_symptoms: 'Симптомов пока нет 🌸',
@@ -225,6 +241,7 @@ const LABELS = {
     ring_hint: (p) => p >= 86 ? 'Magical days time 🌺' : p >= 61 ? 'Magical days coming soon 🌙' : p >= 26 ? 'Mid-cycle — glow day approaching 💫' : 'New cycle — rest time 🌸',
     leg_period: 'Magical days', leg_fertile: 'Fertile days', leg_glow: 'Glow day', leg_pms: 'Sensitive days',
     day_names: ['Mo','Tu','We','Th','Fr','Sa','Su'],
+    month_names: ['January','February','March','April','May','June','July','August','September','October','November','December'],
     history_title: 'Cycle history', no_cycles: 'No cycles yet 🌸',
     cycle_num: (n) => `Cycle ${n}`,
     no_symptoms: 'No symptoms yet 🌸',
@@ -248,6 +265,7 @@ const LABELS = {
     ring_hint: (p) => p >= 86 ? 'Сиқырлы күндер уақыты 🌺' : p >= 61 ? 'Сиқырлы күндер жақын 🌙' : p >= 26 ? 'Циклдің ортасы — жарқын күн жақын 💫' : 'Жаңа цикл — демалу уақыты 🌸',
     leg_period: 'Сиқырлы күндер', leg_fertile: 'Фертилді күндер', leg_glow: 'Жарқын күн', leg_pms: 'Сезімтал күндер',
     day_names: ['Дс','Сс','Ср','Бс','Жм','Сн','Жк'],
+    month_names: ['Қаңтар','Ақпан','Наурыз','Сәуір','Мамыр','Маусым','Шілде','Тамыз','Қыркүйек','Қазан','Қараша','Желтоқсан'],
     history_title: 'Цикл тарихы', no_cycles: 'Циклдер жоқ 🌸',
     cycle_num: (n) => `${n}-цикл`,
     no_symptoms: 'Симптомдар жоқ 🌸',
@@ -271,6 +289,7 @@ const LABELS = {
     ring_hint: (p) => p >= 86 ? 'Вақти рӯзҳои ҷодугарӣ 🌺' : p >= 61 ? 'Рӯзҳои ҷодугарӣ наздик 🌙' : p >= 26 ? 'Миёнаи давра — рӯзи дурахшон наздик 💫' : 'Давраи нав — вақти истироҳат 🌸',
     leg_period: 'Рӯзҳои ҷодугарӣ', leg_fertile: 'Рӯзҳои фертилӣ', leg_glow: 'Рӯзи дурахшон', leg_pms: 'Рӯзҳои ҳассос',
     day_names: ['Дш','Сш','Чш','Пш','Ҷм','Шн','Яш'],
+    month_names: ['Январ','Феврал','Март','Апрел','Май','Июн','Июл','Август','Сентябр','Октябр','Ноябр','Декабр'],
     history_title: 'Таърихи давра', no_cycles: 'Давра нест 🌸',
     cycle_num: (n) => `Давраи ${n}`,
     no_symptoms: 'Ҳанӯз аломат нест 🌸',
@@ -294,6 +313,7 @@ const LABELS = {
     ring_hint: (p) => p >= 86 ? 'Сыйкырлуу күндөр мезгили 🌺' : p >= 61 ? 'Сыйкырлуу күндөр жакын 🌙' : p >= 26 ? 'Циклдин ортосу — жарык күн жакын 💫' : 'Жаңы цикл — эс алуу мезгили 🌸',
     leg_period: 'Сыйкырлуу күндөр', leg_fertile: 'Фертилдик күндөр', leg_glow: 'Жарык күн', leg_pms: 'Сезгич күндөр',
     day_names: ['Дш','Шш','Ср','Бш','Жм','Иш','Жк'],
+    month_names: ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'],
     history_title: 'Цикл тарыхы', no_cycles: 'Цикл жок 🌸',
     cycle_num: (n) => `${n}-цикл`,
     no_symptoms: 'Симптом жок 🌸',
@@ -487,7 +507,7 @@ function renderOverview() {
 function renderCalendar() {
   const L = LABELS[getLang()] || LABELS.uz;
   const today = new Date();
-  const year = today.getFullYear(), month = today.getMonth();
+  const year = calYear, month = calMonth;
   const firstDay = new Date(year, month, 1).getDay();
   const daysInMonth = new Date(year, month + 1, 0).getDate();
 
@@ -507,7 +527,15 @@ function renderCalendar() {
   const pmsDate = predictions.pms_start ? new Date(predictions.pms_start) : null;
   const nextPeriod = predictions.next_period ? new Date(predictions.next_period) : null;
 
+  const isNextDisabled = year > today.getFullYear() || (year === today.getFullYear() && month >= today.getMonth() + 1);
+  const monthName = (L.month_names || [])[month] || '';
+
   let html = `
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:4px 0 10px">
+      <button onclick="prevCalMonth()" style="background:none;border:none;font-size:26px;cursor:pointer;color:var(--accent);padding:0 12px;line-height:1">‹</button>
+      <span style="font-size:15px;font-weight:600;color:var(--text-dark)">${monthName} ${year}</span>
+      <button onclick="nextCalMonth()" ${isNextDisabled ? 'disabled' : ''} style="background:none;border:none;font-size:26px;cursor:pointer;color:${isNextDisabled ? 'var(--border)' : 'var(--accent)'};padding:0 12px;line-height:1">›</button>
+    </div>
     <div class="legend">
       <span class="leg"><span class="leg-dot" style="background:#f43f5e"></span>${L.leg_period}</span>
       <span class="leg"><span class="leg-dot" style="background:#d1fae5;border:0.5px solid #6ee7b7"></span>${L.leg_fertile}</span>
