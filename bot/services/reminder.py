@@ -6,7 +6,7 @@ from aiogram import Bot
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 from bot.database.db import async_session
-from bot.database.models import User, Cycle
+from bot.database.models import User, Cycle, Symptom
 from bot.services.cycle_service import get_last_cycle, compute_next_period, compute_ovulation, compute_pms_start
 from bot.services.i18n import t
 
@@ -168,6 +168,44 @@ async def send_period_messages(bot: Bot, time_of_day: str):
             pass
 
 
+async def send_daily_pain_check(bot: Bot):
+    today = date.today()
+    async with async_session() as session:
+        result = await session.execute(
+            select(User, Cycle).join(Cycle, Cycle.user_id == User.id).where(
+                User.role == "woman",
+                User.reminder_enabled == True,
+                Cycle.end_date == None,
+            )
+        )
+        rows = result.all()
+
+    for user, cycle in rows:
+        try:
+            async with async_session() as s2:
+                existing = (await s2.execute(
+                    select(Symptom).where(
+                        Symptom.user_id == user.id,
+                        Symptom.date == today,
+                        Symptom.pain_level.isnot(None),
+                    )
+                )).scalar_one_or_none()
+            if existing:
+                continue
+            lang = user.language
+            kb = InlineKeyboardMarkup(inline_keyboard=[[
+                InlineKeyboardButton(text=t(lang, "btn_daily_pain"), callback_data="proactive_pain"),
+            ]])
+            await bot.send_message(
+                user.id,
+                t(lang, "daily_pain_ask"),
+                reply_markup=kb,
+                parse_mode="HTML",
+            )
+        except Exception:
+            pass
+
+
 async def _get_last(user_id: int):
     async with async_session() as session:
         return await get_last_cycle(session, user_id)
@@ -180,4 +218,5 @@ def setup_scheduler(bot: Bot) -> AsyncIOScheduler:
     scheduler.add_job(check_unclosed_cycles, "cron", hour=9, minute=5, args=[bot])
     scheduler.add_job(send_period_messages, "cron", hour=9, minute=10, args=[bot, "morning"])
     scheduler.add_job(send_period_messages, "cron", hour=20, minute=0, args=[bot, "evening"])
+    scheduler.add_job(send_daily_pain_check, "cron", hour=11, minute=0, args=[bot])
     return scheduler

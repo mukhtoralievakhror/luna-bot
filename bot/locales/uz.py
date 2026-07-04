@@ -95,6 +95,7 @@ texts = {
     "pain_types_done": "✅ Tayyor",
     "pain_types_saved": "Og'riq ma'lumoti saqlandi 💕",
     "pre_period_pain_ask": "🌙 Sehrli kunlaringiz <b>{days} kundan keyin</b> boshlanadi.\n\nBugun o'zingizni qanday his qilyapsiz? Og'riq bor-yo'qligini belgilang:",
+    "daily_pain_ask": "🌸 Sehrli kunlar davom etmoqda, jonim 💕\n\nBugungi ahvolingiz qanday? Og'riqlarni belgilang:",
     "settings_pain_time": "⏰ Og'riq eslatmasi vaqti",
     "pain_time_set": "Og'riq eslatmasi {hour}:00 ga o'rnatildi ✅",
     "cycle_check_question": "🌸 Sehrli kunlar boshlanganiga <b>{days} kun</b> bo'ldi, azizim.\n\nHali ham davom etyaptimi?",

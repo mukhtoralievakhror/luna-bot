@@ -325,7 +325,8 @@ async def trigger_reminders(secret: str = Query(...), type: str = Query("all")):
     _check(secret)
     from aiogram import Bot as AiogramBot
     from bot.services.reminder import (
-        send_reminders, send_period_messages, send_pain_reminders, check_unclosed_cycles
+        send_reminders, send_period_messages, send_pain_reminders,
+        check_unclosed_cycles, send_daily_pain_check
     )
 
     bot = AiogramBot(token=BOT_TOKEN)
@@ -346,6 +347,9 @@ async def trigger_reminders(secret: str = Query(...), type: str = Query("all")):
         if type in ("all", "cycle_check"):
             await check_unclosed_cycles(bot)
             fired.append("check_unclosed_cycles")
+        if type in ("all", "daily_pain"):
+            await send_daily_pain_check(bot)
+            fired.append("send_daily_pain_check")
     finally:
         await bot.session.close()
 

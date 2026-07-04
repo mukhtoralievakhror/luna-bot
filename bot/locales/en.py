@@ -95,6 +95,7 @@ texts = {
     "pain_types_done": "✅ Done",
     "pain_types_saved": "Pain data saved 💕",
     "pre_period_pain_ask": "🌙 Your magical days start <b>in {days} days</b>.\n\nHow are you feeling today? Mark any pain:",
+    "daily_pain_ask": "🌸 Magical days are still going, dear 💕\n\nHow are you feeling today? Track your pain:",
     "settings_pain_time": "⏰ Pain reminder time",
     "pain_time_set": "Pain reminder set to {hour}:00 ✅",
     "cycle_check_question": "🌸 Your magical days have been going for <b>{days} days</b>, lovely.\n\nAre they still continuing?",
