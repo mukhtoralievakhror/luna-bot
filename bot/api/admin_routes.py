@@ -11,6 +11,7 @@ from sqlalchemy import select, func, text
 from bot.database.db import async_session
 from bot.database.models import User, Cycle, Symptom
 from bot.config import BOT_TOKEN, ADMIN_SECRET
+from bot.services.cycle_service import get_last_cycle, compute_next_period, compute_ovulation, compute_pms_start
 
 router = APIRouter(prefix="/admin/api")
 
@@ -239,3 +240,113 @@ async def health(secret: str = Query(...)):
         "cycles": cycle_count,
         "symptoms": symptom_count,
     }
+
+
+@router.get("/debug/reminders")
+async def debug_reminders(secret: str = Query(...)):
+    """Show why each user did or did not receive a reminder today."""
+    _check(secret)
+    today = date.today()
+    results = []
+
+    async with async_session() as session:
+        users = (await session.execute(
+            select(User).where(User.role == "woman")
+        )).scalars().all()
+
+        for user in users:
+            last = await get_last_cycle(session, user.id)
+            entry: dict = {
+                "id": user.id,
+                "first_name": user.first_name,
+                "username": user.username,
+                "reminder_enabled": user.reminder_enabled,
+                "language": user.language,
+            }
+
+            if not last:
+                entry["reason"] = "no_cycle"
+                entry["would_send"] = []
+                results.append(entry)
+                continue
+
+            active_cycle = last if last.end_date is None else None
+            next_period = compute_next_period(last.start_date, user.avg_cycle_length)
+            ovulation = compute_ovulation(next_period)
+            pms_start = compute_pms_start(ovulation)
+            days_until = (next_period - today).days
+
+            entry["last_cycle_start"] = last.start_date.isoformat()
+            entry["last_cycle_end"] = last.end_date.isoformat() if last.end_date else None
+            entry["next_period"] = next_period.isoformat()
+            entry["days_until_period"] = days_until
+            entry["ovulation"] = ovulation.isoformat()
+            entry["pms_start"] = pms_start.isoformat()
+            entry["active_cycle_day"] = (today - active_cycle.start_date).days + 1 if active_cycle else None
+
+            would_send = []
+            reasons_not_sent = []
+
+            if not user.reminder_enabled:
+                reasons_not_sent.append("reminder_disabled")
+            else:
+                if days_until == user.reminder_days_before:
+                    would_send.append(f"reminder_period (days={days_until})")
+                if today == ovulation:
+                    would_send.append("reminder_ovulation")
+                if today == pms_start:
+                    would_send.append("reminder_pms")
+
+                if active_cycle:
+                    day_num = (today - active_cycle.start_date).days + 1
+                    if 1 <= day_num <= 5:
+                        would_send.append(f"period_message_morning (day {day_num})")
+                        would_send.append(f"period_message_evening (day {day_num})")
+                    else:
+                        reasons_not_sent.append(f"active_cycle_day_{day_num}_outside_1_5")
+                else:
+                    reasons_not_sent.append("no_active_cycle")
+
+                if not would_send and not reasons_not_sent:
+                    reasons_not_sent.append(
+                        f"no_trigger_today (days_until={days_until}, reminder_days_before={user.reminder_days_before})"
+                    )
+
+            entry["would_send"] = would_send
+            entry["reasons_not_sent"] = reasons_not_sent
+            results.append(entry)
+
+    return {"today": today.isoformat(), "users": results}
+
+
+@router.post("/trigger/reminders")
+async def trigger_reminders(secret: str = Query(...), type: str = Query("all")):
+    """Manually fire reminder jobs now. type=all|period|morning|evening|pain"""
+    _check(secret)
+    from aiogram import Bot as AiogramBot
+    from bot.services.reminder import (
+        send_reminders, send_period_messages, send_pain_reminders, check_unclosed_cycles
+    )
+
+    bot = AiogramBot(token=BOT_TOKEN)
+    fired = []
+    try:
+        if type in ("all", "period"):
+            await send_reminders(bot)
+            fired.append("send_reminders")
+        if type in ("all", "morning"):
+            await send_period_messages(bot, "morning")
+            fired.append("send_period_messages(morning)")
+        if type in ("all", "evening"):
+            await send_period_messages(bot, "evening")
+            fired.append("send_period_messages(evening)")
+        if type in ("all", "pain"):
+            await send_pain_reminders(bot)
+            fired.append("send_pain_reminders")
+        if type in ("all", "cycle_check"):
+            await check_unclosed_cycles(bot)
+            fired.append("check_unclosed_cycles")
+    finally:
+        await bot.session.close()
+
+    return {"fired": fired, "time": datetime.utcnow().isoformat() + "Z"}

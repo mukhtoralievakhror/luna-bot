@@ -224,6 +224,28 @@ textarea{resize:vertical;min-height:110px}
       </div>
       <p id="health-time" style="font-size:13px;color:#6b6b6b;margin-top:8px">—</p>
     </div>
+
+    <div class="card" style="margin-top:0">
+      <div class="card-title">🔔 Eslatmalarni qo'lda yuborish</div>
+      <p style="font-size:13px;color:#6b6b6b;margin-bottom:12px">Agar scheduler o'z vaqtida ishlamagan bo'lsa, hozir qo'lda ishga tushiring:</p>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn" onclick="triggerReminder('period')">📅 Davr eslatmasi</button>
+        <button class="btn" onclick="triggerReminder('morning')">🌅 Ertalabki xabar</button>
+        <button class="btn" onclick="triggerReminder('evening')">🌙 Kechki xabar</button>
+        <button class="btn" onclick="triggerReminder('cycle_check')">🔍 Sikl tekshiruv</button>
+        <button class="btn btn-secondary" onclick="triggerReminder('all')">▶️ Hammasini yuborish</button>
+      </div>
+      <div id="trigger-result" style="margin-top:12px;font-size:13px"></div>
+    </div>
+
+    <div class="card" style="margin-top:0">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <div class="card-title" style="margin:0">🔍 Nima uchun habar kelmadi?</div>
+        <button class="btn btn-secondary" onclick="loadDebugReminders()">Tekshirish</button>
+      </div>
+      <p style="font-size:13px;color:#6b6b6b;margin-bottom:12px">Bugun har bir foydalanuvchiga qanday xabar yuborilishi kerak edi va nima uchun yuborilmadi:</p>
+      <div id="debug-content"></div>
+    </div>
   </div>
 </div>
 
@@ -479,6 +501,67 @@ function loadHealth() {
     document.getElementById('health-time').textContent = 'Yangilangan: ' + new Date().toLocaleTimeString();
   }).catch(e => {
     document.getElementById('health-content').innerHTML = `<p style="color:#f43f5e">Xatolik: ${e.message}</p>`;
+  });
+}
+
+// ── TRIGGER REMINDERS ──
+async function triggerReminder(type) {
+  const el = document.getElementById('trigger-result');
+  el.textContent = 'Yuborilmoqda...';
+  el.style.color = '#6b6b6b';
+  try {
+    const r = await fetch(`/admin/api/trigger/reminders?secret=${encodeURIComponent(SECRET)}&type=${type}`, { method: 'POST' });
+    const d = await r.json();
+    el.textContent = '✅ Yuborildi: ' + d.fired.join(', ') + ' (' + d.time.slice(11,19) + ' UTC)';
+    el.style.color = '#065f46';
+  } catch(e) {
+    el.textContent = '❌ Xatolik: ' + e.message;
+    el.style.color = '#f43f5e';
+  }
+}
+
+// ── DEBUG REMINDERS ──
+function loadDebugReminders() {
+  const el = document.getElementById('debug-content');
+  el.innerHTML = '<p style="color:#6b6b6b">Tekshirilmoqda...</p>';
+  api('/debug/reminders').then(d => {
+    if (!d.users.length) { el.innerHTML = '<p>Foydalanuvchi yo\'q</p>'; return; }
+    let html = `<p style="font-size:12px;color:#6b6b6b;margin-bottom:8px">Sana: ${d.today}</p>`;
+    d.users.forEach(u => {
+      const name = u.first_name || u.username || u.id;
+      const hasSend = u.would_send && u.would_send.length > 0;
+      const color = hasSend ? '#065f46' : '#9a3412';
+      const bg = hasSend ? '#d1fae5' : '#fee2e2';
+      html += `<div style="border:0.5px solid #e5e7eb;border-radius:8px;padding:10px;margin-bottom:8px;background:var(--white)">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <b style="font-size:13px">${name}</b>
+          <span style="font-size:11px;background:${bg};color:${color};padding:2px 8px;border-radius:20px">
+            ${hasSend ? '✅ ' + u.would_send.length + ' xabar' : '❌ xabar yo\'q'}
+          </span>
+        </div>`;
+      if (!u.reminder_enabled) {
+        html += `<p style="font-size:12px;color:#f43f5e;margin:4px 0 0">⚠️ reminder_enabled = false</p>`;
+      }
+      if (u.reason === 'no_cycle') {
+        html += `<p style="font-size:12px;color:#6b6b6b;margin:4px 0 0">Sikl yo'q</p>`;
+      } else {
+        if (u.active_cycle_day) {
+          html += `<p style="font-size:12px;color:#6b6b6b;margin:4px 0 0">Aktiv sikl: ${u.active_cycle_day}-kun | Keyingi hayz: ${u.next_period} (${u.days_until_period} kun)</p>`;
+        } else {
+          html += `<p style="font-size:12px;color:#6b6b6b;margin:4px 0 0">Aktiv sikl yo'q | Keyingi hayz: ${u.next_period} (${u.days_until_period} kun)</p>`;
+        }
+      }
+      if (u.would_send && u.would_send.length) {
+        html += `<p style="font-size:12px;color:#065f46;margin:4px 0 0">📤 ${u.would_send.join(' | ')}</p>`;
+      }
+      if (u.reasons_not_sent && u.reasons_not_sent.length) {
+        html += `<p style="font-size:12px;color:#9a3412;margin:4px 0 0">🚫 ${u.reasons_not_sent.join(' | ')}</p>`;
+      }
+      html += '</div>';
+    });
+    el.innerHTML = html;
+  }).catch(e => {
+    el.innerHTML = `<p style="color:#f43f5e">Xatolik: ${e.message}</p>`;
   });
 }
 
