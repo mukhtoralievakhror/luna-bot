@@ -251,6 +251,10 @@ textarea{resize:vertical;min-height:110px}
 </div>
 
 <script>
+// Names come from Telegram profiles, so anyone can put markup in them.
+function esc(v) {
+  return String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
 let SECRET = localStorage.getItem('luna_admin_secret') || '';
 let currentPage = 1;
 let totalUsers = 0;
@@ -370,9 +374,9 @@ function loadUsers(page) {
       return;
     }
     tbody.innerHTML = d.users.map(u => {
-      const name = u.first_name || '—';
+      const name = esc(u.first_name || '—');
       const userLink = u.username
-        ? `<a href="https://t.me/${u.username}" target="_blank" style="color:#f43f5e;text-decoration:none;font-size:12px">@${u.username}</a>`
+        ? `<a href="https://t.me/${encodeURIComponent(u.username)}" target="_blank" style="color:#f43f5e;text-decoration:none;font-size:12px">@${esc(u.username)}</a>`
         : `<span style="color:#a0a0a0;font-size:11px">username yo'q</span>`;
       return `<tr>
         <td>
@@ -529,7 +533,7 @@ function loadDebugReminders() {
     if (!d.users.length) { el.innerHTML = '<p>Foydalanuvchi yo\'q</p>'; return; }
     let html = `<p style="font-size:12px;color:#6b6b6b;margin-bottom:8px">Sana: ${d.today}</p>`;
     d.users.forEach(u => {
-      const name = u.first_name || u.username || u.id;
+      const name = esc(u.first_name || u.username || u.id);
       const hasSend = u.would_send && u.would_send.length > 0;
       const color = hasSend ? '#065f46' : '#9a3412';
       const bg = hasSend ? '#d1fae5' : '#fee2e2';

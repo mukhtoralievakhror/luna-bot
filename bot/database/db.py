@@ -36,6 +36,10 @@ async def init_db():
         await conn.execute(text(
             "ALTER TABLE symptoms ADD COLUMN IF NOT EXISTS pain_types TEXT;"
         ))
+        # Existing rows predate onboarding tracking, so they count as onboarded.
+        await conn.execute(text(
+            "ALTER TABLE users ADD COLUMN IF NOT EXISTS onboarded BOOLEAN DEFAULT TRUE;"
+        ))
 
 
 async def get_session() -> AsyncSession:

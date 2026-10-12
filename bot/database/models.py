@@ -28,6 +28,7 @@ class User(Base):
     role: Mapped[str] = mapped_column(String(10), default="woman")
     partner_id: Mapped[Optional[int]] = mapped_column(BigInteger, nullable=True)
     partner_notify: Mapped[bool] = mapped_column(Boolean, default=False)
+    onboarded: Mapped[bool] = mapped_column(Boolean, default=False)
 
     cycles: Mapped[list["Cycle"]] = relationship(back_populates="user", cascade="all, delete-orphan")
     symptoms: Mapped[list["Symptom"]] = relationship(back_populates="user", cascade="all, delete-orphan")

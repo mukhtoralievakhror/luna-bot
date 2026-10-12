@@ -1,4 +1,4 @@
-from datetime import date, timedelta
+from datetime import timedelta
 from aiogram import Router, F
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
@@ -6,10 +6,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from bot.database.db import async_session
 from bot.services.cycle_service import (
-    get_or_create_user, get_active_cycle, start_cycle, end_cycle,
-    get_last_cycle, compute_next_period, compute_ovulation, compute_pms_start, get_all_cycles,
+    get_or_create_user, get_active_cycle, start_cycle, end_cycle, get_predictions,
 )
 from bot.services.i18n import t
+from bot.services.timeutil import today
 from bot.keyboards.inline import main_menu, flow_keyboard
 
 router = Router()
@@ -87,17 +87,18 @@ async def cycle_check_no(call: CallbackQuery):
 
 @router.callback_query(F.data.startswith("cycle_end:"))
 async def cycle_end_manual(call: CallbackQuery):
-    days_ago = int(call.data.split(":")[1])
-    end_date = date.today() - timedelta(days=days_ago)
+    days_ago = min(3, max(0, int(call.data.split(":")[1])))
+    end_date = today() - timedelta(days=days_ago)
     async with async_session() as session:
         user = await get_or_create_user(session, call.from_user.id)
         lang = user.language
         cycle = await end_cycle(session, call.from_user.id, custom_end_date=end_date)
     if cycle is None:
+        await call.message.edit_text(t(lang, "cycle_not_active"))
         await call.answer()
         return
     await call.message.edit_text(
-        t(lang, "cycle_ended_manual", date=end_date.strftime("%d.%m.%Y")),
+        t(lang, "cycle_ended_manual", date=cycle.end_date.strftime("%d.%m.%Y")),
         parse_mode="HTML",
     )
     await call.answer()
@@ -109,16 +110,16 @@ async def build_status(user, session) -> str:
     if active:
         return t(lang, "status_active", start_date=active.start_date.strftime("%d.%m.%Y"))
 
-    last = await get_last_cycle(session, user.id)
-    if not last:
+    pred = await get_predictions(session, user)
+    if not pred:
         return t(lang, "status_no_data")
 
-    next_period = compute_next_period(last.start_date, user.avg_cycle_length)
-    days_left = (next_period - date.today()).days
-    ovulation = compute_ovulation(next_period)
-    pms_start = compute_pms_start(ovulation)
+    next_period = pred["next_period"]
+    days_left = (next_period - today()).days
+    if days_left < 0:
+        return t(lang, "status_late", days=-days_left, next_date=next_period.strftime("%d.%m.%Y"))
 
-    status = t(lang, "status_next", days=max(0, days_left), next_date=next_period.strftime("%d.%m.%Y"))
-    status += "\n" + t(lang, "status_ovulation", date=ovulation.strftime("%d.%m.%Y"))
-    status += "\n" + t(lang, "status_pms", date=pms_start.strftime("%d.%m.%Y"))
+    status = t(lang, "status_next", days=days_left, next_date=next_period.strftime("%d.%m.%Y"))
+    status += "\n" + t(lang, "status_ovulation", date=pred["ovulation"].strftime("%d.%m.%Y"))
+    status += "\n" + t(lang, "status_pms", date=pred["pms_start"].strftime("%d.%m.%Y"))
     return status

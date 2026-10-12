@@ -64,6 +64,8 @@
     .cal-day-name { font-size: 10px; color: var(--text-soft); padding: 4px 0; font-weight: 500; }
     .cal-day { font-size: 12px; padding: 6px 2px; border-radius: 50%; aspect-ratio: 1; display: flex; align-items: center; justify-content: center; }
     .cal-day.period { background: var(--accent); color: white; }
+    .cal-day.period.predicted { opacity: .5; }
+    .note-text { font-size: 13px; color: var(--text-dark); white-space: pre-wrap; word-break: break-word; }
     .cal-day.ovulation { background: var(--accent-light); color: var(--accent); }
     .cal-day.pms { background: var(--surface); color: var(--text-mid); border: 0.5px solid var(--border); }
     .cal-day.fertile { background: #d1fae5; color: #065f46; }
@@ -157,23 +159,42 @@ const tg = window.Telegram.WebApp;
 tg.ready();
 tg.expand();
 
-const userId = tg.initDataUnsafe?.user?.id;
+const initData = tg.initData || '';
 const API_BASE = 'https://luna-bot-production-6d42.up.railway.app';
 
 let DATA = null;
 let calYear = new Date().getFullYear();
 let calMonth = new Date().getMonth();
 
+function canGoNextMonth() {
+  const now = new Date();
+  return calYear * 12 + calMonth < now.getFullYear() * 12 + now.getMonth() + 1;
+}
 function prevCalMonth() {
   calMonth--; if (calMonth < 0) { calMonth = 11; calYear--; }
   renderCalendar();
 }
 function nextCalMonth() {
-  const now = new Date();
-  const maxY = now.getFullYear(), maxM = now.getMonth() + 2;
-  if (calYear > maxY || (calYear === maxY && calMonth >= maxM - 1)) return;
+  if (!canGoNextMonth()) return;
   calMonth++; if (calMonth > 11) { calMonth = 0; calYear++; }
   renderCalendar();
+}
+
+// Dates arrive as YYYY-MM-DD in Tashkent time; `new Date(str)` would read them as
+// UTC midnight and shift them a day in any UTC+ zone, so build local dates instead.
+function parseYMD(s) {
+  const [y, m, d] = s.split('-').map(Number);
+  return new Date(y, m - 1, d);
+}
+function startOfToday() {
+  const n = new Date();
+  return new Date(n.getFullYear(), n.getMonth(), n.getDate());
+}
+function addDays(d, n) {
+  const r = new Date(d); r.setDate(r.getDate() + n); return r;
+}
+function esc(v) {
+  return String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
 
 // ── i18n ──────────────────────────────────────────────
@@ -201,6 +222,9 @@ const LABELS = {
     recent_pain: "So'nggi og'riq yozuvlari",
     pain_type_labels: { cramp: '🌀 Qorin', headache: '🤕 Bosh', back: '💙 Bel', chest: '🌸 Ko\'krak' },
     saved: 'Saqlandi ✓',
+    late: (n) => `${n} kun kechikmoqda`, passed: "o'tdi", notes_title: '📝 Izohlar',
+    not_registered: 'Avval botda /start bosing 🌸',
+    header_late: (n) => `Sehrli kunlar ${n} kun kechikmoqda`, header_today: 'Sehrli kunlar bugun kutilmoqda 🌸',
   },
   ru: {
     tab_overview: '✨ Обзор', tab_calendar: '📅 Календарь',
@@ -225,6 +249,9 @@ const LABELS = {
     recent_pain: 'Последние записи о боли',
     pain_type_labels: { cramp: '🌀 Живот', headache: '🤕 Голова', back: '💙 Поясница', chest: '🌸 Грудь' },
     saved: 'Сохранено ✓',
+    late: (n) => `задержка ${n} дн.`, passed: 'прошёл', notes_title: '📝 Заметки',
+    not_registered: 'Сначала нажми /start в боте 🌸',
+    header_late: (n) => `Волшебные дни задерживаются на ${n} дн.`, header_today: 'Волшебные дни ожидаются сегодня 🌸',
   },
   en: {
     tab_overview: '✨ Overview', tab_calendar: '📅 Calendar',
@@ -249,6 +276,9 @@ const LABELS = {
     recent_pain: 'Recent pain records',
     pain_type_labels: { cramp: '🌀 Cramps', headache: '🤕 Headache', back: '💙 Back', chest: '🌸 Chest' },
     saved: 'Saved ✓',
+    late: (n) => `${n} days late`, passed: 'passed', notes_title: '📝 Notes',
+    not_registered: 'Tap /start in the bot first 🌸',
+    header_late: (n) => `Magical days are ${n} days late`, header_today: 'Magical days expected today 🌸',
   },
   kk: {
     tab_overview: '✨ Жалпы', tab_calendar: '📅 Күнтізбе',
@@ -273,6 +303,9 @@ const LABELS = {
     recent_pain: 'Соңғы ауырсыну жазбалары',
     pain_type_labels: { cramp: '🌀 Іш', headache: '🤕 Бас', back: '💙 Бел', chest: '🌸 Кеуде' },
     saved: 'Сақталды ✓',
+    late: (n) => `${n} күн кешігуде`, passed: 'өтті', notes_title: '📝 Жазбалар',
+    not_registered: 'Алдымен ботта /start бас 🌸',
+    header_late: (n) => `Сиқырлы күндер ${n} күн кешігуде`, header_today: 'Сиқырлы күндер бүгін күтілуде 🌸',
   },
   tg: {
     tab_overview: '✨ Умумӣ', tab_calendar: '📅 Тақвим',
@@ -297,6 +330,9 @@ const LABELS = {
     recent_pain: 'Сабтҳои охирини дард',
     pain_type_labels: { cramp: '🌀 Шикам', headache: '🤕 Сар', back: '💙 Камар', chest: '🌸 Сина' },
     saved: 'Сабт шуд ✓',
+    late: (n) => `${n} рӯз дер`, passed: 'гузашт', notes_title: '📝 Қайдҳо',
+    not_registered: 'Аввал дар бот /start-ро пахш кун 🌸',
+    header_late: (n) => `Рӯзҳои ҷодугарӣ ${n} рӯз дер мекунанд`, header_today: 'Рӯзҳои ҷодугарӣ имрӯз интизоранд 🌸',
   },
   ky: {
     tab_overview: '✨ Жалпы', tab_calendar: '📅 Күнтөркүн',
@@ -321,6 +357,9 @@ const LABELS = {
     recent_pain: 'Акыркы оору жазуулары',
     pain_type_labels: { cramp: '🌀 Курсак', headache: '🤕 Баш', back: '💙 Бел', chest: '🌸 Көкүрөк' },
     saved: 'Сакталды ✓',
+    late: (n) => `${n} күн кечигүүдө`, passed: 'өттү', notes_title: '📝 Жазуулар',
+    not_registered: 'Адегенде ботто /start бас 🌸',
+    header_late: (n) => `Сыйкырлуу күндөр ${n} күн кечигүүдө`, header_today: 'Сыйкырлуу күндөр бүгүн күтүлүүдө 🌸',
   },
 };
 
@@ -358,13 +397,18 @@ function markActiveLangBtn() {
 
 // ── Core ──────────────────────────────────────────────
 async function loadData() {
-  if (!userId) {
+  if (!initData) {
     document.getElementById('overview-content').innerHTML =
       `<p style="text-align:center;padding:2rem;color:var(--accent)">${(LABELS[getLang()]||LABELS.uz).open_in_tg}</p>`;
     return;
   }
   try {
-    const res = await fetch(`${API_BASE}/api/user/${userId}/data`);
+    const res = await fetch(`${API_BASE}/api/me/data`, { headers: { 'X-Telegram-Init-Data': initData } });
+    if (res.status === 404) {
+      document.getElementById('overview-content').innerHTML =
+        `<p style="text-align:center;padding:2rem;color:var(--accent)">${(LABELS[getLang()]||LABELS.uz).not_registered}</p>`;
+      return;
+    }
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     DATA = await res.json();
     if (!localStorage.getItem('miniapp_lang')) {
@@ -388,17 +432,18 @@ function showTab(name) {
 
 function fmt(dateStr) {
   if (!dateStr) return '—';
-  const d = new Date(dateStr);
+  const d = parseYMD(dateStr);
   return d.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' });
 }
 
 function daysUntil(dateStr) {
   if (!dateStr) return null;
-  return Math.ceil((new Date(dateStr) - new Date()) / 86400000);
+  return Math.round((parseYMD(dateStr) - startOfToday()) / 86400000);
 }
 
 function renderAll() {
   if (!DATA) return;
+  document.querySelectorAll('.loading').forEach(el => el.classList.remove('loading'));
   renderOverview();
   renderCalendar();
   renderHistory();
@@ -426,9 +471,10 @@ function renderPartner() {
 }
 
 async function disconnectPartner() {
-  if (!userId) return;
+  if (!initData) return;
   try {
-    await fetch(`${API_BASE}/api/user/${userId}/partner/disconnect`, { method: 'POST' });
+    const res = await fetch(`${API_BASE}/api/me/partner/disconnect`, { method: 'POST', headers: { 'X-Telegram-Init-Data': initData } });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
     DATA.user.partner_id = null;
     DATA.user.partner_notify = false;
     renderPartner();
@@ -442,19 +488,28 @@ function renderOverview() {
   const { user, predictions, cycles } = DATA;
   const nextDays = daysUntil(predictions.next_period);
   const ovDays = daysUntil(predictions.ovulation);
-  const ringPct = nextDays != null
-    ? Math.max(0, Math.min(100, Math.round((1 - nextDays / user.avg_cycle_length) * 100)))
+  const active = cycles.some(c => !c.end_date);
+  const cycleDay = cycles.length
+    ? Math.round((startOfToday() - parseYMD(cycles[0].start_date)) / 86400000) + 1
+    : null;
+  const ringPct = cycleDay != null
+    ? Math.max(0, Math.min(100, Math.round(cycleDay / user.avg_cycle_length * 100)))
     : 0;
+  const hint = active ? L.ring_hint(100) : L.ring_hint(ringPct);
 
-  document.getElementById('header-sub').textContent = nextDays != null
-    ? (nextDays > 0 ? L.header_next(nextDays) : L.header_started)
-    : L.header_none;
+  let header = L.header_none;
+  if (active) header = L.header_started;
+  else if (nextDays != null) header = nextDays > 0 ? L.header_next(nextDays) : nextDays === 0 ? L.header_today : L.header_late(-nextDays);
+  document.getElementById('header-sub').textContent = header;
+
+  const nextUnit = nextDays == null ? '—' : nextDays > 0 ? nextDays + ' ' + L.days : nextDays === 0 ? L.today : L.late(-nextDays);
+  const ovUnit = ovDays == null ? '—' : ovDays > 0 ? ovDays + ' ' + L.days : ovDays === 0 ? L.today : L.passed;
 
   document.getElementById('overview-content').innerHTML = `
     <div class="ring-wrap">
       <canvas id="ringChart" class="ring" width="180" height="180"></canvas>
     </div>
-    <p style="text-align:center;font-size:13px;color:var(--text-mid);margin:-4px 0 14px">${L.ring_hint(ringPct)}</p>
+    <p style="text-align:center;font-size:13px;color:var(--text-mid);margin:-4px 0 14px">${hint}</p>
     <div class="stat-grid">
       <div class="stat-card">
         <div class="stat-label">${L.avg_cycle}</div>
@@ -469,12 +524,12 @@ function renderOverview() {
       <div class="stat-card">
         <div class="stat-label">${L.next_lbl}</div>
         <div class="stat-value" style="font-size:15px">${fmt(predictions.next_period)}</div>
-        <div class="stat-unit">${nextDays != null ? (nextDays > 0 ? nextDays + ' ' + L.days : L.today) : '—'}</div>
+        <div class="stat-unit">${nextUnit}</div>
       </div>
       <div class="stat-card">
         <div class="stat-label">${L.glow_lbl}</div>
         <div class="stat-value" style="font-size:15px">${fmt(predictions.ovulation)}</div>
-        <div class="stat-unit">${ovDays != null ? (ovDays > 0 ? ovDays + ' ' + L.days : L.today) : '—'}</div>
+        <div class="stat-unit">${ovUnit}</div>
       </div>
     </div>
     <p style="text-align:center;font-size:12px;color:var(--text-soft);margin-top:4px">
@@ -506,7 +561,7 @@ function renderOverview() {
 
 function renderCalendar() {
   const L = LABELS[getLang()] || LABELS.uz;
-  const today = new Date();
+  const today = startOfToday();
   const year = calYear, month = calMonth;
   const firstDay = new Date(year, month, 1).getDay();
   const daysInMonth = new Date(year, month + 1, 0).getDate();
@@ -514,20 +569,21 @@ function renderCalendar() {
   const periodDates = new Set();
   const { cycles, predictions } = DATA;
   cycles.forEach(c => {
-    let d = new Date(c.start_date);
-    const end = c.end_date ? new Date(c.end_date) : today;
+    let d = parseYMD(c.start_date);
+    const end = c.end_date ? parseYMD(c.end_date) : today;
     while (d <= end) {
       if (d.getFullYear() === year && d.getMonth() === month) periodDates.add(d.getDate());
       d.setDate(d.getDate() + 1);
     }
   });
 
-  const ovDate = predictions.ovulation ? new Date(predictions.ovulation) : null;
-  const fertileStart = ovDate ? new Date(ovDate.getTime() - 5 * 86400000) : null;
-  const pmsDate = predictions.pms_start ? new Date(predictions.pms_start) : null;
-  const nextPeriod = predictions.next_period ? new Date(predictions.next_period) : null;
+  const ovDate = predictions.ovulation ? parseYMD(predictions.ovulation) : null;
+  const fertileStart = ovDate ? addDays(ovDate, -5) : null;
+  const pmsDate = predictions.pms_start ? parseYMD(predictions.pms_start) : null;
+  const nextPeriod = predictions.next_period ? parseYMD(predictions.next_period) : null;
+  const nextEnd = nextPeriod ? addDays(nextPeriod, DATA.user.avg_period_length) : null;
 
-  const isNextDisabled = year > today.getFullYear() || (year === today.getFullYear() && month >= today.getMonth() + 1);
+  const isNextDisabled = !canGoNextMonth();
   const monthName = (L.month_names || [])[month] || '';
 
   let html = `
@@ -552,10 +608,10 @@ function renderCalendar() {
     const cur = new Date(year, month, d);
     let cls = 'cal-day';
     if (periodDates.has(d)) cls += ' period';
-    else if (nextPeriod && cur >= nextPeriod && cur < new Date(nextPeriod.getTime() + DATA.user.avg_period_length * 86400000)) cls += ' period';
-    else if (ovDate && cur.toDateString() === ovDate.toDateString()) cls += ' ovulation';
+    else if (nextPeriod && cur >= nextPeriod && cur < nextEnd) cls += ' period predicted';
+    else if (ovDate && cur.getTime() === ovDate.getTime()) cls += ' ovulation';
     else if (fertileStart && ovDate && cur >= fertileStart && cur < ovDate) cls += ' fertile';
-    else if (pmsDate && cur >= pmsDate && ovDate && cur <= ovDate) cls += ' pms';
+    else if (pmsDate && nextPeriod && cur >= pmsDate && cur < nextPeriod) cls += ' pms';
     if (cur.toDateString() === today.toDateString()) cls += ' today';
     html += `<div class="${cls}">${d}</div>`;
   }
@@ -593,7 +649,7 @@ function painChipsHtml(pain_types_json, L) {
     if (!types.length) return '';
     return types.map(pt => {
       const label = (L.pain_type_labels || {})[pt] || pt;
-      return `<span class="pain-chip">${label}</span>`;
+      return `<span class="pain-chip">${esc(label)}</span>`;
     }).join('');
   } catch { return ''; }
 }
@@ -606,7 +662,8 @@ function renderMood() {
       `<p style="text-align:center;padding:2rem;color:var(--text-mid)">${L.no_symptoms}</p>`;
     return;
   }
-  const last30 = symptoms.slice(0, 30).reverse();
+  const cutoff = addDays(startOfToday(), -29);
+  const last30 = symptoms.filter(s => parseYMD(s.date) >= cutoff).reverse();
   const labels = last30.map(s => s.date.slice(5));
   const pain = last30.map(s => s.pain_level || 0);
   const moodMap = { happy: 5, normal: 3, tired: 2, sad: 1, irritable: 1 };
@@ -624,7 +681,20 @@ function renderMood() {
       `).join('')}
     </div>` : '';
 
+  const withNotes = symptoms.filter(s => s.notes).slice(0, 10);
+  const notesHtml = withNotes.length ? `
+    <div class="card" style="margin-bottom:12px">
+      <div class="chart-title" style="margin-bottom:8px">${L.notes_title}</div>
+      ${withNotes.map(s => `
+        <div class="sym-row">
+          <div class="sym-date">${fmt(s.date)}</div>
+          <div class="note-text">${esc(s.notes)}</div>
+        </div>
+      `).join('')}
+    </div>` : '';
+
   document.getElementById('mood-content').innerHTML = `
+    ${notesHtml}
     ${recentPainHtml}
     <div class="chart-wrap">
       <div class="chart-title">${L.pain_title}</div>

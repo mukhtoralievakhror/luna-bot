@@ -1,5 +1,6 @@
-from datetime import date, datetime
-from zoneinfo import ZoneInfo
+import logging
+from datetime import datetime, timedelta
+
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from sqlalchemy import select
 from aiogram import Bot
@@ -7,212 +8,176 @@ from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 from bot.database.db import async_session
 from bot.database.models import User, Cycle, Symptom
-from bot.services.cycle_service import get_last_cycle, compute_next_period, compute_ovulation, compute_pms_start
+from bot.locales.period_messages import period_message
+from bot.services.cycle_service import end_cycle, get_predictions
 from bot.services.i18n import t
+from bot.services.timeutil import TZ, today
 
-PERIOD_MESSAGES = {
-    1: {
-        "morning": "Sehrli kunlaringiz boshlandi, azizim 🌸\n\nBugun tanangiz siz uchun qattiq ishlayapti.\nIssiq choy, yumshoq plaid va ozgina dam —\nbugun bularni haqiqatan loyiq ko'rasiz 💕\n\nBiz yongingizdamiz 🌙",
-        "evening": "Kechqurun bo'ldi, jonim 🌙\n\nBugungi kun qanday o'tdi?\nTanangiz bugun ko'p ish qildi — unga rahmat ayting 🥹\n\nErtaga biroz yengilroq bo'ladi, va'da beramiz 🌸\nYaxshi uxlang, azizim 💤",
-    },
-    2: {
-        "morning": "Xayrli tong, gulim 🌺\n\nSehrli kunlarning 2-kuni —\nba'zida bu kun biroz og'irroq tuyulishi mumkin.\n\nBu tanangizning kuchi, zaiflik emas 💪🏻\nBugun sevgan ovqatingizni yeb ko'ring 🍵",
-        "evening": "Siz bugun ham ajoyib edingiz 🌟\n\nOg'riq bo'lgan bo'lsa ham, davom ettingiz —\nbu kuch 🌸\n\nIssiq suv qoplama va yoqimli musiqa —\nbugun kechqurun siz uchun 🎵💕",
-    },
-    3: {
-        "morning": "Assalomu alaykum, rayhonginam 🌿\n\n3-kun — ko'pchilik bugun biroz yengil his qiladi.\nTanangiz siz bilan birga ishlayapti 🤝\n\nBugun ozgina yurish, toza havo —\ntanangiz xursand bo'ladi 🍃",
-        "evening": "Kechqurun, chiroyli qizim 🌙\n\nOynaga qarang —\nu yerda kuchli, go'zal bir ayol turibdi 🪞✨\n\nErtaga yanada yaxshiroq bo'lasiz,\nishoning 💛",
-    },
-    4: {
-        "morning": "Hayrli tong, aziz qizim 🌼\n\n4-kun — energiya asta qaytmoqda 🌱\n\nBugun nimaga xursand bo'ldingiz?\nBitta narsa bo'lsa ham yetarli 💛",
-        "evening": "Kechqurun, yulduzim ⭐\n\nBugungi og'riqlar kamaygandir, deb umid qilamiz 🌸\n\nAgar hali ham sezayotgan bo'lsangiz —\nbu ham o'tadi, har doim o'tadi 🌊\n\nErtaga yangilanish boshlanadi 🌙",
-    },
-    5: {
-        "morning": "Xayrli tong, sevgilim 🌟\n\nSehrli kunlarning so'nggi kuni!\nTanangiz bu oyda ham mo'jizasini yaratdi 🌸\n\nBugun o'zingizni tabriklang —\nsiz har oyda bu kuchni olib yurasiz 💪🏻✨",
-        "evening": "Va sehrli kunlar tugadi, gulim 🌺\n\nBu oyda o'zingizga g'amxo'r bo'ldingizmi?\nUmid qilamiz 💕\n\nEndi yangilanish davri boshlanadi —\neneriya, kayfiyat, hayot qaytadi 🌱\n\nKeyingi sehrli kunlar kelguncha\no'zingizni asrang, azizim 🌸\n\nLuna har doim yonginizda 🌙",
-    },
-}
+log = logging.getLogger(__name__)
 
-TZ = ZoneInfo("Asia/Tashkent")
+AUTO_CLOSE_DAY = 10
+
+
+def auto_close_day(avg_period_length: int) -> int:
+    return max(AUTO_CLOSE_DAY, avg_period_length + 3)
+
+
+def _pain_kb(lang: str) -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup(inline_keyboard=[[
+        InlineKeyboardButton(text=t(lang, "btn_daily_pain"), callback_data="proactive_pain"),
+    ]])
+
+
+async def _active_rows():
+    async with async_session() as session:
+        result = await session.execute(
+            select(User, Cycle).join(Cycle, Cycle.user_id == User.id).where(
+                User.role == "woman",
+                Cycle.end_date.is_(None),
+            )
+        )
+        return result.all()
 
 
 async def send_reminders(bot: Bot):
-    today = date.today()
+    day = today()
     async with async_session() as session:
-        result = await session.execute(select(User).where(User.reminder_enabled == True))
-        users = result.scalars().all()
+        women = (await session.execute(select(User).where(User.role == "woman"))).scalars().all()
 
-    for user in users:
+    for user in women:
         try:
-            last = await _get_last(user.id)
-            if not last:
+            async with async_session() as session:
+                pred = await get_predictions(session, user)
+                partner = await session.get(User, user.partner_id) if user.partner_id else None
+            if not pred or pred["active"]:
                 continue
-            next_period = compute_next_period(last.start_date, user.avg_cycle_length)
-            ovulation = compute_ovulation(next_period)
-            pms_start = compute_pms_start(ovulation)
-            days_until = (next_period - today).days
-            lang = user.language
-
+            days_until = (pred["next_period"] - day).days
             if days_until == user.reminder_days_before:
-                await bot.send_message(user.id, t(lang, "reminder_period", days=days_until))
-            elif today == ovulation:
-                await bot.send_message(user.id, t(lang, "reminder_ovulation"))
-            elif today == pms_start:
-                await bot.send_message(user.id, t(lang, "reminder_pms"))
+                kind = "period"
+            elif day == pred["ovulation"]:
+                kind = "ovulation"
+            elif day == pred["pms_start"]:
+                kind = "pms"
+            else:
+                continue
 
-            if user.partner_id and user.partner_notify:
-                try:
-                    async with async_session() as psession:
-                        from bot.database.models import User as UserModel
-                        partner = await psession.get(UserModel, user.partner_id)
-                    if partner:
-                        p_lang = partner.language
-                        if days_until == user.reminder_days_before:
-                            await bot.send_message(user.partner_id, t(p_lang, "partner_notify_period", days=days_until))
-                        elif today == ovulation:
-                            await bot.send_message(user.partner_id, t(p_lang, "partner_notify_ovulation"))
-                        elif today == pms_start:
-                            await bot.send_message(user.partner_id, t(p_lang, "partner_notify_pms"))
-                except Exception:
-                    pass
+            if user.reminder_enabled:
+                await bot.send_message(user.id, t(user.language, f"reminder_{kind}", days=days_until))
+            if partner and user.partner_notify and partner.reminder_enabled:
+                await bot.send_message(partner.id, t(partner.language, f"partner_notify_{kind}", days=days_until))
         except Exception:
-            pass
+            log.exception("send_reminders failed for %s", user.id)
 
 
 async def send_pain_reminders(bot: Bot):
     now_hour = datetime.now(TZ).hour
-    today = date.today()
+    day = today()
     async with async_session() as session:
-        result = await session.execute(
+        users = (await session.execute(
             select(User).where(
                 User.role == "woman",
                 User.reminder_enabled == True,
                 User.pain_reminder_hour == now_hour,
             )
-        )
-        users = result.scalars().all()
+        )).scalars().all()
 
     for user in users:
         try:
-            last = await _get_last(user.id)
-            if not last:
+            async with async_session() as session:
+                pred = await get_predictions(session, user)
+            if not pred or pred["active"]:
                 continue
-            next_period = compute_next_period(last.start_date, user.avg_cycle_length)
-            days_until = (next_period - today).days
+            days_until = (pred["next_period"] - day).days
             if days_until not in (3, 4):
                 continue
-            lang = user.language
-            kb = InlineKeyboardMarkup(inline_keyboard=[[
-                InlineKeyboardButton(text=t(lang, "btn_daily_pain"), callback_data="proactive_pain"),
-            ]])
             await bot.send_message(
                 user.id,
-                t(lang, "pre_period_pain_ask", days=days_until),
-                reply_markup=kb,
+                t(user.language, "pre_period_pain_ask", days=days_until),
+                reply_markup=_pain_kb(user.language),
                 parse_mode="HTML",
             )
         except Exception:
-            pass
+            log.exception("send_pain_reminders failed for %s", user.id)
 
 
 async def check_unclosed_cycles(bot: Bot):
-    today = date.today()
-    async with async_session() as session:
-        result = await session.execute(
-            select(User, Cycle).join(Cycle, Cycle.user_id == User.id).where(
-                User.role == "woman",
-                Cycle.end_date == None,
-            )
-        )
-        rows = result.all()
-
-    for user, cycle in rows:
+    """Past the usual period length, ask daily whether it's still going; auto-close on day 10."""
+    day = today()
+    for user, cycle in await _active_rows():
         try:
-            day_num = (today - cycle.start_date).days
-            if day_num != 4:
-                continue
+            elapsed = (day - cycle.start_date).days
+            day_num = elapsed + 1
             lang = user.language
+
+            if day_num >= auto_close_day(user.avg_period_length):
+                end_date = min(cycle.start_date + timedelta(days=user.avg_period_length - 1), day)
+                async with async_session() as session:
+                    closed = await end_cycle(session, user.id, custom_end_date=end_date)
+                if closed and user.reminder_enabled:
+                    await bot.send_message(
+                        user.id,
+                        t(lang, "cycle_auto_closed", date=closed.end_date.strftime("%d.%m.%Y")),
+                        parse_mode="HTML",
+                    )
+                continue
+
+            if day_num <= user.avg_period_length or not user.reminder_enabled:
+                continue
             kb = InlineKeyboardMarkup(inline_keyboard=[[
                 InlineKeyboardButton(text=t(lang, "cycle_check_yes"), callback_data="cycle_check:yes"),
                 InlineKeyboardButton(text=t(lang, "cycle_check_no"), callback_data="cycle_check:no"),
             ]])
             await bot.send_message(
                 user.id,
-                t(lang, "cycle_check_question", days=day_num),
+                t(lang, "cycle_check_question", days=elapsed),
                 reply_markup=kb,
                 parse_mode="HTML",
             )
         except Exception:
-            pass
+            log.exception("check_unclosed_cycles failed for %s", user.id)
 
 
 async def send_period_messages(bot: Bot, time_of_day: str):
-    today = date.today()
-    async with async_session() as session:
-        result = await session.execute(
-            select(User, Cycle).join(Cycle, Cycle.user_id == User.id).where(
-                User.role == "woman",
-                Cycle.end_date == None,
-            )
-        )
-        rows = result.all()
-
-    for user, cycle in rows:
+    day = today()
+    for user, cycle in await _active_rows():
         try:
-            day_num = (today - cycle.start_date).days + 1
-            if day_num not in PERIOD_MESSAGES:
+            if not user.reminder_enabled:
                 continue
-            msg = PERIOD_MESSAGES[day_num][time_of_day]
-            await bot.send_message(user.id, msg, parse_mode="HTML")
+            msg = period_message(user.language, (day - cycle.start_date).days + 1, time_of_day)
+            if msg:
+                await bot.send_message(user.id, msg, parse_mode="HTML")
         except Exception:
-            pass
+            log.exception("send_period_messages failed for %s", user.id)
 
 
 async def send_daily_pain_check(bot: Bot):
-    today = date.today()
-    async with async_session() as session:
-        result = await session.execute(
-            select(User, Cycle).join(Cycle, Cycle.user_id == User.id).where(
-                User.role == "woman",
-                User.reminder_enabled == True,
-                Cycle.end_date == None,
-            )
-        )
-        rows = result.all()
-
-    for user, cycle in rows:
+    day = today()
+    for user, cycle in await _active_rows():
         try:
-            async with async_session() as s2:
-                existing = (await s2.execute(
-                    select(Symptom).where(
-                        Symptom.user_id == user.id,
-                        Symptom.date == today,
-                        Symptom.pain_level.isnot(None),
-                    )
-                )).scalar_one_or_none()
-            if existing:
+            if not user.reminder_enabled:
                 continue
-            lang = user.language
-            kb = InlineKeyboardMarkup(inline_keyboard=[[
-                InlineKeyboardButton(text=t(lang, "btn_daily_pain"), callback_data="proactive_pain"),
-            ]])
+            async with async_session() as session:
+                reported = (await session.execute(
+                    select(Symptom.id).where(
+                        Symptom.user_id == user.id,
+                        Symptom.date == day,
+                        Symptom.pain_level.isnot(None),
+                    ).limit(1)
+                )).scalar_one_or_none()
+            if reported:
+                continue
             await bot.send_message(
                 user.id,
-                t(lang, "daily_pain_ask"),
-                reply_markup=kb,
+                t(user.language, "daily_pain_ask"),
+                reply_markup=_pain_kb(user.language),
                 parse_mode="HTML",
             )
         except Exception:
-            pass
-
-
-async def _get_last(user_id: int):
-    async with async_session() as session:
-        return await get_last_cycle(session, user_id)
+            log.exception("send_daily_pain_check failed for %s", user.id)
 
 
 def setup_scheduler(bot: Bot) -> AsyncIOScheduler:
-    scheduler = AsyncIOScheduler(timezone="Asia/Tashkent")
+    scheduler = AsyncIOScheduler(timezone=TZ)
     scheduler.add_job(send_reminders, "cron", hour=9, minute=0, args=[bot])
     scheduler.add_job(send_pain_reminders, "cron", minute=0, args=[bot])
     scheduler.add_job(check_unclosed_cycles, "cron", hour=9, minute=5, args=[bot])

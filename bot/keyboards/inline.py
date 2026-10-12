@@ -67,26 +67,30 @@ def holat_menu_keyboard(lang: str) -> InlineKeyboardMarkup:
     ]])
 
 
-_PAIN_TYPES = ["cramp", "headache", "back", "chest"]
+PAIN_TYPES = ["cramp", "headache", "back", "chest"]
 _PAIN_TYPE_KEYS = {
     "cramp": "pain_type_cramp",
     "headache": "pain_type_headache",
     "back": "pain_type_back",
     "chest": "pain_type_chest",
 }
+# One-letter codes keep the pain-level callback_data under Telegram's 64-byte limit.
+PAIN_CODES = {"cramp": "c", "headache": "h", "back": "b", "chest": "x"}
+PAIN_FROM_CODE = {v: k for k, v in PAIN_CODES.items()}
 
 
-def pain_types_keyboard(lang: str, selected: list) -> InlineKeyboardMarkup:
+def pain_types_keyboard(lang: str, selected: list, chain: bool = False) -> InlineKeyboardMarkup:
+    m = int(chain)
     rows = []
-    for pt in _PAIN_TYPES:
+    for pt in PAIN_TYPES:
         mark = "✅ " if pt in selected else "⬜ "
         rows.append([InlineKeyboardButton(
             text=mark + t(lang, _PAIN_TYPE_KEYS[pt]),
-            callback_data=f"ptype:{pt}",
+            callback_data=f"ptype:{pt}:{m}",
         )])
     rows.append([
-        InlineKeyboardButton(text=t(lang, "pain_type_none"), callback_data="ptype_none"),
-        InlineKeyboardButton(text=t(lang, "pain_types_done"), callback_data="ptype_done"),
+        InlineKeyboardButton(text=t(lang, "pain_type_none"), callback_data=f"ptype_none:{m}"),
+        InlineKeyboardButton(text=t(lang, "pain_types_done"), callback_data=f"ptype_done:{m}"),
     ])
     return InlineKeyboardMarkup(inline_keyboard=rows)
 
@@ -103,20 +107,21 @@ def pain_hour_keyboard(lang: str, current_hour: int) -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(inline_keyboard=[buttons])
 
 
-def flow_keyboard(lang: str) -> InlineKeyboardMarkup:
+def flow_keyboard(lang: str, chain: bool = True) -> InlineKeyboardMarkup:
+    m = int(chain)
     return InlineKeyboardMarkup(inline_keyboard=[[
-        InlineKeyboardButton(text=t(lang, "flow_light"), callback_data="flow:light"),
-        InlineKeyboardButton(text=t(lang, "flow_medium"), callback_data="flow:medium"),
-        InlineKeyboardButton(text=t(lang, "flow_heavy"), callback_data="flow:heavy"),
+        InlineKeyboardButton(text=t(lang, "flow_light"), callback_data=f"flow:light:{m}"),
+        InlineKeyboardButton(text=t(lang, "flow_medium"), callback_data=f"flow:medium:{m}"),
+        InlineKeyboardButton(text=t(lang, "flow_heavy"), callback_data=f"flow:heavy:{m}"),
     ]])
 
 
-def pain_keyboard(lang: str) -> InlineKeyboardMarkup:
+def pain_keyboard(lang: str, chain: bool, types: list) -> InlineKeyboardMarkup:
+    m = int(chain)
+    codes = "".join(PAIN_CODES[pt] for pt in types if pt in PAIN_CODES)
     return InlineKeyboardMarkup(inline_keyboard=[[
-        InlineKeyboardButton(text=t(lang, "pain_none"), callback_data="pain:0"),
-        InlineKeyboardButton(text=t(lang, "pain_mild"), callback_data="pain:1"),
-        InlineKeyboardButton(text=t(lang, "pain_moderate"), callback_data="pain:3"),
-        InlineKeyboardButton(text=t(lang, "pain_severe"), callback_data="pain:5"),
+        InlineKeyboardButton(text=t(lang, key), callback_data=f"pain:{lvl}:{m}:{codes}")
+        for key, lvl in (("pain_none", 0), ("pain_mild", 1), ("pain_moderate", 3), ("pain_severe", 5))
     ]])
 
 
@@ -134,25 +139,29 @@ def mood_keyboard(lang: str) -> InlineKeyboardMarkup:
     ])
 
 
-def reminder_keyboard(lang: str, enabled: bool) -> InlineKeyboardMarkup:
-    toggle_text = t(lang, "reminder_off") if enabled else t(lang, "reminder_on")
-    return InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text=toggle_text, callback_data="reminder:toggle")],
-        [
-            InlineKeyboardButton(text="1 kun", callback_data="reminder:days:1"),
-            InlineKeyboardButton(text="2 kun", callback_data="reminder:days:2"),
-            InlineKeyboardButton(text="3 kun", callback_data="reminder:days:3"),
-        ],
-    ])
+def reminder_keyboard(lang: str, enabled: bool, current_days: int = 0, is_partner: bool = False) -> InlineKeyboardMarkup:
+    toggle_text = t(lang, "btn_reminder_turn_off") if enabled else t(lang, "btn_reminder_turn_on")
+    rows = [[InlineKeyboardButton(text=toggle_text, callback_data="reminder:toggle")]]
+    if not is_partner:
+        rows.append([
+            InlineKeyboardButton(
+                text=("✅ " if n == current_days else "") + t(lang, "n_days", n=n),
+                callback_data=f"reminder:days:{n}",
+            )
+            for n in (1, 2, 3)
+        ])
+    return InlineKeyboardMarkup(inline_keyboard=rows)
 
 
-def settings_keyboard(lang: str) -> InlineKeyboardMarkup:
-    return InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text=t(lang, "settings_change_lang"), callback_data="settings:lang")],
-        [InlineKeyboardButton(text=t(lang, "settings_partner"), callback_data="settings:partner")],
-        [InlineKeyboardButton(text=t(lang, "settings_pain_time"), callback_data="settings:pain_time")],
-        [InlineKeyboardButton(text=t(lang, "settings_reset"), callback_data="settings:reset")],
-    ])
+def settings_keyboard(lang: str, is_partner: bool = False) -> InlineKeyboardMarkup:
+    rows = [[InlineKeyboardButton(text=t(lang, "settings_change_lang"), callback_data="settings:lang")]]
+    if not is_partner:
+        rows += [
+            [InlineKeyboardButton(text=t(lang, "settings_partner"), callback_data="settings:partner")],
+            [InlineKeyboardButton(text=t(lang, "settings_pain_time"), callback_data="settings:pain_time")],
+        ]
+    rows.append([InlineKeyboardButton(text=t(lang, "settings_reset"), callback_data="settings:reset")])
+    return InlineKeyboardMarkup(inline_keyboard=rows)
 
 
 def partner_keyboard(lang: str, has_partner: bool) -> InlineKeyboardMarkup:
@@ -164,9 +173,9 @@ def partner_keyboard(lang: str, has_partner: bool) -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(inline_keyboard=rows)
 
 
-def partner_confirm_keyboard(lang: str, code: str) -> InlineKeyboardMarkup:
+def partner_confirm_keyboard(lang: str, code: str, requester_id: int) -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(inline_keyboard=[[
-        InlineKeyboardButton(text=t(lang, "partner_confirm_yes"), callback_data=f"partner:confirm:{code}"),
+        InlineKeyboardButton(text=t(lang, "partner_confirm_yes"), callback_data=f"partner:confirm:{code}:{requester_id}"),
         InlineKeyboardButton(text=t(lang, "partner_confirm_no"), callback_data=f"partner:reject:{code}"),
     ]])
 

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import os
-from datetime import datetime, date, timedelta
+from datetime import datetime, timedelta
 from typing import Optional
 
 from fastapi import APIRouter, HTTPException, Query
@@ -11,7 +11,9 @@ from sqlalchemy import select, func, text
 from bot.database.db import async_session
 from bot.database.models import User, Cycle, Symptom
 from bot.config import BOT_TOKEN, ADMIN_SECRET
-from bot.services.cycle_service import get_last_cycle, compute_next_period, compute_ovulation, compute_pms_start
+from bot.services.cycle_service import get_active_cycle, get_predictions
+from bot.services.reminder import auto_close_day
+from bot.services.timeutil import today as tz_today
 
 router = APIRouter(prefix="/admin/api")
 
@@ -37,7 +39,7 @@ async def get_stats(secret: str = Query(...)):
         total_cycles = (await session.execute(select(func.count()).select_from(Cycle))).scalar()
         total_symptoms = (await session.execute(select(func.count()).select_from(Symptom))).scalar()
 
-        today = date.today()
+        today = tz_today()
         week_ago = today - timedelta(days=7)
         month_ago = today - timedelta(days=30)
 
@@ -244,18 +246,15 @@ async def health(secret: str = Query(...)):
 
 @router.get("/debug/reminders")
 async def debug_reminders(secret: str = Query(...)):
-    """Show why each user did or did not receive a reminder today."""
+    """Show which scheduled messages each woman should get today, and why not."""
     _check(secret)
-    today = date.today()
+    today = tz_today()
     results = []
 
     async with async_session() as session:
-        users = (await session.execute(
-            select(User).where(User.role == "woman")
-        )).scalars().all()
+        users = (await session.execute(select(User).where(User.role == "woman"))).scalars().all()
 
         for user in users:
-            last = await get_last_cycle(session, user.id)
             entry: dict = {
                 "id": user.id,
                 "first_name": user.first_name,
@@ -263,51 +262,56 @@ async def debug_reminders(secret: str = Query(...)):
                 "reminder_enabled": user.reminder_enabled,
                 "language": user.language,
             }
-
-            if not last:
-                entry["reason"] = "no_cycle"
-                entry["would_send"] = []
+            pred = await get_predictions(session, user)
+            if not pred:
+                entry.update(reason="no_cycle", would_send=[], reasons_not_sent=["no_cycle"])
                 results.append(entry)
                 continue
 
-            active_cycle = last if last.end_date is None else None
-            next_period = compute_next_period(last.start_date, user.avg_cycle_length)
-            ovulation = compute_ovulation(next_period)
-            pms_start = compute_pms_start(ovulation)
-            days_until = (next_period - today).days
+            active = await get_active_cycle(session, user.id)
+            days_until = (pred["next_period"] - today).days
+            entry.update(
+                next_period=pred["next_period"].isoformat(),
+                days_until_period=days_until,
+                ovulation=pred["ovulation"].isoformat(),
+                pms_start=pred["pms_start"].isoformat(),
+                active_cycle_day=(today - active.start_date).days + 1 if active else None,
+            )
 
-            entry["last_cycle_start"] = last.start_date.isoformat()
-            entry["last_cycle_end"] = last.end_date.isoformat() if last.end_date else None
-            entry["next_period"] = next_period.isoformat()
-            entry["days_until_period"] = days_until
-            entry["ovulation"] = ovulation.isoformat()
-            entry["pms_start"] = pms_start.isoformat()
-            entry["active_cycle_day"] = (today - active_cycle.start_date).days + 1 if active_cycle else None
-
-            would_send = []
-            reasons_not_sent = []
-
-            if not user.reminder_enabled:
+            would_send, reasons_not_sent = [], []
+            if active:
+                day_num = entry["active_cycle_day"]
+                close_day = auto_close_day(user.avg_period_length)
+                if day_num >= close_day:
+                    would_send.append(f"auto_close (day {day_num})")
+                elif not user.reminder_enabled:
+                    reasons_not_sent.append("reminder_disabled")
+                else:
+                    if day_num <= 5:
+                        would_send.append(f"period_message morning+evening (day {day_num})")
+                    has_pain = (await session.execute(
+                        select(Symptom.id).where(
+                            Symptom.user_id == user.id, Symptom.date == today, Symptom.pain_level.isnot(None)
+                        ).limit(1)
+                    )).scalar_one_or_none()
+                    if has_pain:
+                        reasons_not_sent.append("daily_pain: already_reported_today")
+                    else:
+                        would_send.append("daily_pain_check 11:00")
+                    if day_num > user.avg_period_length:
+                        would_send.append(f"cycle_check_question (auto-close on day {close_day})")
+            elif not user.reminder_enabled:
                 reasons_not_sent.append("reminder_disabled")
             else:
                 if days_until == user.reminder_days_before:
                     would_send.append(f"reminder_period (days={days_until})")
-                if today == ovulation:
+                elif today == pred["ovulation"]:
                     would_send.append("reminder_ovulation")
-                if today == pms_start:
+                elif today == pred["pms_start"]:
                     would_send.append("reminder_pms")
-
-                if active_cycle:
-                    day_num = (today - active_cycle.start_date).days + 1
-                    if 1 <= day_num <= 5:
-                        would_send.append(f"period_message_morning (day {day_num})")
-                        would_send.append(f"period_message_evening (day {day_num})")
-                    else:
-                        reasons_not_sent.append(f"active_cycle_day_{day_num}_outside_1_5")
-                else:
-                    reasons_not_sent.append("no_active_cycle")
-
-                if not would_send and not reasons_not_sent:
+                if days_until in (3, 4):
+                    would_send.append(f"pre_period_pain_ask at {user.pain_reminder_hour}:00")
+                if not would_send:
                     reasons_not_sent.append(
                         f"no_trigger_today (days_until={days_until}, reminder_days_before={user.reminder_days_before})"
                     )
