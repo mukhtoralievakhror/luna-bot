@@ -1,5 +1,5 @@
 from aiogram import Router, F
-from aiogram.types import Message, CallbackQuery, ReplyKeyboardRemove
+from aiogram.types import Message, CallbackQuery
 from aiogram.fsm.context import FSMContext
 from sqlalchemy import delete, update
 
@@ -9,8 +9,9 @@ from bot.services.cycle_service import (
     get_or_create_user, get_all_cycles, get_predictions,
 )
 from bot.services.i18n import t
+from bot.handlers.start import send_welcome
 from bot.keyboards.inline import (
-    main_menu, lang_select, lang_change_select, settings_keyboard, reset_confirm_keyboard,
+    main_menu, lang_change_select, settings_keyboard, reset_confirm_keyboard,
     reminder_keyboard, partner_main_menu, pain_hour_keyboard
 )
 
@@ -124,8 +125,8 @@ async def do_reset(call: CallbackQuery, state: FSMContext):
         await call.message.delete()
     except Exception:
         pass
-    await call.message.answer(t(lang, "reset_done"), reply_markup=ReplyKeyboardRemove(), parse_mode="HTML")
-    await call.message.answer(t(lang, "welcome"), reply_markup=lang_select(), parse_mode="HTML")
+    await call.message.answer(t(lang, "reset_done"), parse_mode="HTML")
+    await send_welcome(call.message, lang)
 
 
 @router.callback_query(F.data == "reset:no")

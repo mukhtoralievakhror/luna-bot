@@ -1,6 +1,6 @@
 from aiogram import Router, F
 from aiogram.filters import CommandStart, Command
-from aiogram.types import Message, CallbackQuery
+from aiogram.types import Message, CallbackQuery, ReplyKeyboardRemove
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 
@@ -20,7 +20,17 @@ class SetupStates(StatesGroup):
 
 
 async def send_welcome(message: Message, lang: str = "uz"):
-    await message.answer(t(lang, "welcome"), reply_markup=lang_select(), parse_mode="HTML")
+    # A message carries one markup, and the old menu keyboard stays on screen until a
+    # ReplyKeyboardRemove arrives — so drop it with the greeting, then offer languages.
+    await message.answer(t(lang, "welcome"), reply_markup=ReplyKeyboardRemove(), parse_mode="HTML")
+    await message.answer(t(lang, "choose_lang"), reply_markup=lang_select())
+
+
+def _parse_days(text: str | None, low: int, high: int) -> int | None:
+    digits = (text or "").strip()
+    if not digits.isdigit():
+        return None
+    return max(low, min(high, int(digits)))
 
 
 @router.message(CommandStart())
@@ -98,14 +108,14 @@ async def set_role_partner(call: CallbackQuery, state: FSMContext):
 
 @router.message(SetupStates.waiting_cycle_len)
 async def set_cycle_len(message: Message, state: FSMContext):
-    try:
-        days = max(20, min(45, int((message.text or "").strip())))
-    except ValueError:
-        days = 28
+    days = _parse_days(message.text, 20, 45)
     async with async_session() as session:
         user = await get_or_create_user(session, message.from_user.id)
-        user.avg_cycle_length = days
         lang = user.language
+        if days is None:
+            await message.answer(t(lang, "ask_cycle_len"), parse_mode="HTML", reply_markup=ReplyKeyboardRemove())
+            return
+        user.avg_cycle_length = days
         await session.commit()
     await message.answer(t(lang, "ask_period_len"), parse_mode="HTML")
     await state.set_state(SetupStates.waiting_period_len)
@@ -113,12 +123,12 @@ async def set_cycle_len(message: Message, state: FSMContext):
 
 @router.message(SetupStates.waiting_period_len)
 async def set_period_len(message: Message, state: FSMContext):
-    try:
-        days = max(2, min(10, int((message.text or "").strip())))
-    except ValueError:
-        days = 5
+    days = _parse_days(message.text, 2, 10)
     async with async_session() as session:
         user = await get_or_create_user(session, message.from_user.id)
+        if days is None:
+            await message.answer(t(user.language, "ask_period_len"), parse_mode="HTML", reply_markup=ReplyKeyboardRemove())
+            return
         user.avg_period_length = days
         user.onboarded = True
         lang = user.language
